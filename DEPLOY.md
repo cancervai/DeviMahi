@@ -10,6 +10,19 @@ tiny and needs no build step on the host.
 (`outputDirectory: "site"`, no build/install command) with cross-origin
 isolation headers.
 
+## Option 0 — GitHub Pages (recommended, one tap on mobile)
+The site is also committed to [`docs/`](docs/) with a `.nojekyll` marker.
+Turn Pages on once (this is the only step a bot can't do for you):
+
+1. On github.com (mobile browser, not the app): open the repo →
+   **Settings** → **Pages**.
+2. **Build and deployment → Source: _Deploy from a branch_.**
+3. Branch: **`claude/nocturne-paws-pygame-init-Ir1tv`**, folder: **`/docs`** → **Save**.
+4. Wait ~1 minute. Live at: **https://cancervai.github.io/devimahi/**
+
+(After the PR merges to `main`, switch the branch dropdown to `main` so the
+URL keeps working.)
+
 ## Option A — Vercel dashboard (no CLI, ~2 min)
 1. Go to https://vercel.com/new and **Import** the `cancervai/devimahi` repo.
 2. Framework Preset: **Other**. Leave Root Directory as the repo root
