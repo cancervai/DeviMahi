@@ -23,7 +23,7 @@ from pathlib import Path
 # do not rename
 async def custom_site():
     import embed
-    platform.document.body.style.background = "#7f7f7f"
+    platform.document.body.style.background = "#0d0506"
 
     platform.window.transfer.hidden = true
     platform.window.canvas.style.visibility = "visible"
@@ -103,16 +103,6 @@ async def custom_site():
 asyncio.run( custom_site() )
 
 
-
-
-
-
-
-
-
-
-
-
 # BEGIN BLOCK
 #
 # now this is the html part you can (and should) customize
@@ -139,297 +129,357 @@ asyncio.run( custom_site() )
 --><script type="application/javascript">
 // END BLOCK
 
+// ── Cross-Origin Isolation via service worker ────────────────────────────────
+// GitHub Pages cannot set COOP/COEP response headers.
+// Without them SharedArrayBuffer is unavailable → pygbag hangs on a blank screen.
+// The service worker intercepts every fetch (including the main document on reload)
+// and injects those headers so the page becomes cross-origin isolated.
+if (!self.crossOriginIsolated && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register("coi-serviceworker.js").then(reg => {
+    function reload() { location.replace(location.href); }
+    if (reg.active) { reload(); return; }
+    (reg.installing || reg.waiting).addEventListener("statechange", e => {
+      if (e.target.state === "activated") reload();
+    });
+    navigator.serviceWorker.addEventListener("controllerchange", reload);
+  }).catch(e => console.warn("COI service-worker:", e));
+}
 
-
-// this dict is available under PyConfig.config from __main__
-
+// ── pygbag config ─────────────────────────────────────────────────────────────
 config = {
-    xtermjs : "1" ,
+    xtermjs : "0",
     _sdl2 : "canvas",
     user_canvas : 0,
     user_canvas_managed : 0,
-    gui_divider : 2,
+    gui_divider : 1,
     ume_block : 1,
     can_close : 0,
     archive : "nocturne_of_paws",
-    gui_debug : 2,
+    gui_debug : 0,
     cdn : "https://pygame-web.github.io/cdn/0.9.3/",
     autorun : 0,
     PYBUILD : "3.12",
-    fb_ar   :  1.77,
-    fb_width : "1280",
-    fb_height : "720"
+    fb_ar   : 1.77,
+    fb_width : "960",
+    fb_height : "540"
 }
 
-function show_infobox() {
-    infobox.style.display = "block";
-
-    // Measure box
-    const w = infobox.offsetWidth;
-    const h = infobox.offsetHeight;
-
-    // Center in viewport
-    const left = (window.innerWidth - w) / 2;
-    const top = (window.innerHeight - h) / 2;
-
-    infobox.style.left = left + "px";
-    infobox.style.top = top + "px";
-}
+function show_infobox() {}
 
 </script>
 
     <title>Nocturne of Paws — Velvet, Crimson &amp; Stardust</title>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="viewport" content="height=device-height, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
-
-
-    <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0d0506">
+    <link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
 
     <style>
-        #status {
-            display: inline-block;
-            vertical-align: top;
-            margin-top: 20px;
-            margin-left: 30px;
-            font-weight: bold;
-            color: rgb(120, 120, 120);
-        }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        #progress {
-            height: 20px;
-            width: 300px;
-        }
+    html, body {
+        width: 100%; height: 100%;
+        overflow: hidden;
+        background: #0d0506;
+        font-family: Georgia, "Times New Roman", serif;
+        color: #c8a84b;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
+    }
 
-        #infobox {
-            position: fixed; /* center relative to viewport */
-            background: green;
-            color: blue;
-            font-weight: bold;
-            padding: 12px 24px;
- /*           display: none; */
-            z-index: 999999;
-        }
-        div.emscripten { text-align: center; }
-        div.emscripten_border { border: 1px solid black; }
-        div.thick_border { border: 4px solid black; }
+    /* ── Game canvas: fixed full-screen, aspect-ratio letterboxed ── */
+    canvas#canvas {
+        position: fixed !important;
+        inset: 0;
+        width: 100vw !important;
+        height: 100vh !important;
+        object-fit: contain;
+        background: #0d0506;
+        z-index: 2;
+        touch-action: none;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
 
-        /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-        /* average size of droid screen 470dp x 320dp  */
-        canvas.emscripten {
-            border: 0px none;
-            background-color: transparent;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
+    /* ── Gothic loading overlay ── */
+    #loading-overlay {
+        position: fixed; inset: 0;
+        background: #0d0506;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 16px;
+        padding: 24px 32px;
+        z-index: 50;
+        transition: opacity 0.8s ease;
+    }
+    #loading-overlay.fade-out { opacity: 0; pointer-events: none; }
 
-            padding: 0;
-            margin: 0 auto;
+    .game-title {
+        font-size: clamp(1.5rem, 6vw, 2.6rem);
+        letter-spacing: 0.12em;
+        color: #c8a84b;
+        text-shadow: 0 0 28px rgba(200,168,75,0.45), 0 0 60px rgba(200,168,75,0.12);
+        text-align: center;
+        line-height: 1.2;
+    }
+    .game-sub {
+        font-size: clamp(0.6rem, 2.5vw, 0.8rem);
+        letter-spacing: 0.4em;
+        color: #4a2828;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    .candles {
+        font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+        animation: flicker 3.2s ease-in-out infinite;
+        letter-spacing: 0.5em;
+    }
+    @keyframes flicker {
+        0%,100%{opacity:0.65} 15%{opacity:1} 40%{opacity:0.8} 70%{opacity:0.95}
+    }
 
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
+    .bar-wrap {
+        width: min(260px, 72vw);
+        height: 3px;
+        background: #1e0e0e;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #6b1212, #c8a84b);
+        border-radius: 2px;
+        transition: width 0.5s ease;
+    }
 
-        body {
-            font-family: arial;
-            margin: 0;
-            padding: none;
-            background-color:powderblue;
-        }
+    #infobox {
+        font-size: clamp(0.68rem, 2.8vw, 0.82rem);
+        color: #5a3333;
+        letter-spacing: 0.07em;
+        text-align: center;
+        min-height: 1.5em;
+        transition: color 0.6s;
+        padding: 0 16px;
+    }
+    #infobox.ready {
+        color: #c8a84b;
+        animation: glow 1.8s ease-in-out infinite;
+    }
+    @keyframes glow { 0%,100%{opacity:0.25} 50%{opacity:1} }
 
-        .topright{
-           position:absolute;
-           top:0px;
-           right:0px;
-        }
+    /* ── Mobile touch controls ── */
+    #touch-ctrls {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 200px;
+        pointer-events: none;
+        z-index: 20;
+        opacity: 0;
+        transition: opacity 0.6s;
+        /* only visible on touch screens */
+        display: none;
+    }
+    @media (pointer: coarse) {
+        #touch-ctrls { display: block; }
+    }
+    #touch-ctrls.visible { opacity: 1; pointer-events: auto; }
 
-        .bottomright {
-            position:absolute;
-            top: 40%;
-            right: 0px;
-        }
+    .tBtn {
+        position: absolute;
+        background: rgba(100,20,20,0.32);
+        border: 1.5px solid rgba(200,168,75,0.32);
+        border-radius: 50%;
+        color: #c8a84b;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none;
+        cursor: pointer;
+        transition: background 0.1s, transform 0.08s;
+        will-change: transform;
+    }
+    .tBtn.pressed, .tBtn:active {
+        background: rgba(200,168,75,0.28);
+        transform: scale(0.92);
+    }
 
-        .center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    /* D-pad (left side) */
+    #bL  { width:60px; height:60px; left:14px;  bottom:74px; }
+    #bR  { width:60px; height:60px; left:90px;  bottom:74px; }
+    #bU  { width:60px; height:60px; left:52px;  bottom:146px; }
 
-        .trinfo{
-           position: relative;
-           right: 0px;
-           border: 1px solid black;
-        }
+    /* Action buttons (right side) */
+    #bJump  { width:64px; height:64px; right:86px;  bottom:104px; font-size:20px; }
+    #bHold  { width:56px; height:56px; right:14px;  bottom:122px; font-size:14px; letter-spacing:0; }
+    #bEnter { width:48px; height:48px; right:154px; bottom:78px;  font-size:13px; }
 
-        .framed{
-           position: relative;
-           top: 150px;
-           right: 10px;
-           border: 1px solid black;
-        }
+    /* ── Hide all pygbag debug / terminal UI ── */
+    #pyconsole, #system, #crt, #dlg, #html,
+    #status, progress, #transfer,
+    #load_min, #load_avg, #load_max, #load_rst,
+    #level, #stateBattery, #aiostop, #aiopaused_true,
+    #aiopaused_false, #pygame_mixer_music_pause,
+    #info, #box, canvas#canvas3d { display: none !important; }
     </style>
-
-    <script>
-/*
-        if (navigator.serviceWorker)
-            navigator.serviceWorker.register("https://pygame-web.github.io/cdn/0.9.3/pygbag0.9.3.js")
-        else
-            console.warn("Service workers not supported")
-*/
-    </script>
 
 </head>
 
 <body>
 
-    <div id="transfer" align=center>
-<!--        <div class="spinner" id='spinner'></div> -->
-        <div class="emscripten" id="status">Downloading...</div>
-        <div class="emscripten">
-            <progress value="0" max="100" id="progress"></progress>
-        </div>
+    <!-- Primary game canvas (pygbag renders here) -->
+    <canvas class="emscripten" id="canvas" width="1px" height="1px"
+        oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
+
+    <!-- Gothic loading overlay -->
+    <div id="loading-overlay">
+        <div class="candles">🕯 🕯 🕯</div>
+        <div class="game-title">Nocturne of Paws</div>
+        <div class="game-sub">Velvet &middot; Crimson &middot; Stardust</div>
+        <div class="bar-wrap"><div class="bar-fill" id="pfill"></div></div>
+        <div id="infobox">Summoning the velvet night&hellip;</div>
     </div>
 
-
-
-    <canvas class="emscripten" id="canvas"
-width="1px"
-height="1px"
-    oncontextmenu="event.preventDefault()" tabindex=1>
-    </canvas>
-
-    <canvas class="emscripten" id="canvas3d"
-width="1280px"
-height="720px"
-    oncontextmenu="event.preventDefault()" tabindex=1 hidden>
-    </canvas>
-
-    <div id="infobox">Loading, please wait ...</div>
-
-    <div id=html></div>
-
-    <div id=crt  class=bottomright >
-
-        <div id="system" hidden>
-            <div class="button-container">
-                <button id="aiostop" disabled>AIO ⏏︎</button>
-                <button id="aiopaused_true" disabled>AIO ■</button>
-                <button id="aiopaused_false" disabled>AIO ▶</button>
-                <button id="pygame_mixer_music_pause" disabled>Music ■</button>
-            </div>
-
-            <div class="button-container">
-                <div id=load_min>min</div>
-                <div id=load_avg>avg</div>
-                <div id=load_max>max</div>
-              <button id="load_rst" disabled>RESET</button>
-            </div>
-
-            <div id="level">(battery level unknown)</div>
-            <div id="stateBattery">(charging state unknown)</div>
-
-        </div>
-
-        <div id=box class="emscripten_border" hidden=true>
-
-            <div id="info" class="trinfo"></div>
-
-            <iframe id="iframe" class="framed" name="iframe"
-width="470px" height="90%"
-allowtransparency="true"
-style="z-index: 10;"
-style="background: #FFFFFF;"
-frameborder="1"
-                allowfullscreen="true"
-                webkitallowfullscreen="true"
-                msallowfullscreen="true"
-                mozallowfullscreen="true"
-                sandbox="allow-same-origin allow-top-navigation allow-scripts allow-pointer-lock"
-                allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
-                src="https://pygame-web.github.io/cdn/0.9.3/empty.html"
-                scrolling="yes">
-            </iframe>
-        </div>
-
+    <!-- Mobile touch controls (pointer:coarse only, fades in after game starts) -->
+    <div id="touch-ctrls">
+        <div class="tBtn" id="bL">&#9664;</div>
+        <div class="tBtn" id="bR">&#9654;</div>
+        <div class="tBtn" id="bU">&#9650;</div>
+        <div class="tBtn" id="bJump" title="Jump (Space)">&#10022;</div>
+        <div class="tBtn" id="bHold" title="Hold / Cuddle (H)">&#9825;</div>
+        <div class="tBtn" id="bEnter" title="Dialogue (Enter)">&#9998;</div>
     </div>
 
-
-    <div id="dlg" hidden>
+    <!-- Invisible stubs pygbag requires to exist in the DOM -->
+    <div id="transfer" hidden></div>
+    <div id="system"   hidden></div>
+    <canvas id="canvas3d" width="960px" height="540px" hidden></canvas>
+    <div id="pyconsole" hidden><div id="terminal" tabIndex="1"></div></div>
+    <div id="html"     hidden></div>
+    <div id="crt"      hidden></div>
+    <div id="dlg"      hidden>
         <input type="file" id="dlg_multifile" multiple accept="image/*">
         <label for="dlg_multifile">Select files</label>
     </div>
-
-    <div id="pyconsole">
-        <div id="terminal" tabIndex=1 align="left"></div>
-    </div>
+    <div id="status"   hidden>Downloading&hellip;</div>
+    <progress id="progress" value="0" max="100" hidden></progress>
+    <div id="load_min" hidden></div><div id="load_avg" hidden></div>
+    <div id="load_max" hidden></div><div id="load_rst" hidden></div>
+    <div id="level"    hidden></div><div id="stateBattery" hidden></div>
+    <div id="aiostop"  hidden></div><div id="aiopaused_true"  hidden></div>
+    <div id="aiopaused_false" hidden></div>
+    <div id="pygame_mixer_music_pause" hidden></div>
+    <div id="info"     hidden></div>
+    <div id="box"      hidden></div>
+    <iframe id="iframe" hidden src="about:blank" name="iframe"></iframe>
 
     <script type="application/javascript">
-
-    globalThis.__canvas_resized = (self, ecw, ech) => {
-        console.warn("TODO: panda3d canvas monitor", self, ecw, ech)
+    // ── Touch controls — fire keyboard events into the canvas ────────────────
+    const KEY_MAP = {
+        bL:    { code: "ArrowLeft",  key: "ArrowLeft"  },
+        bR:    { code: "ArrowRight", key: "ArrowRight" },
+        bU:    { code: "ArrowUp",    key: "ArrowUp"    },
+        bJump: { code: "Space",      key: " "          },
+        bHold: { code: "KeyH",       key: "h"          },
+        bEnter:{ code: "Enter",      key: "Enter"      },
+    };
+    function fireKey(code, key, type) {
+        const opts = { code, key, bubbles: true, cancelable: true };
+        document.dispatchEvent(new KeyboardEvent(type, opts));
+        const cv = document.getElementById("canvas");
+        if (cv) cv.dispatchEvent(new KeyboardEvent(type, opts));
     }
+    Object.entries(KEY_MAP).forEach(([id, { code, key }]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("touchstart", e => {
+            e.preventDefault();
+            el.classList.add("pressed");
+            fireKey(code, key, "keydown");
+        }, { passive: false });
+        el.addEventListener("touchend", e => {
+            e.preventDefault();
+            el.classList.remove("pressed");
+            fireKey(code, key, "keyup");
+        }, { passive: false });
+        el.addEventListener("mousedown", () => { el.classList.add("pressed");    fireKey(code, key, "keydown"); });
+        el.addEventListener("mouseup",   () => { el.classList.remove("pressed"); fireKey(code, key, "keyup");   });
+    });
+
+    // ── Loading progress ────────────────────────────────────────────────────
+    const pfill   = document.getElementById("pfill");
+    const infobox = document.getElementById("infobox");
+    const overlay = document.getElementById("loading-overlay");
+    const tCtrls  = document.getElementById("touch-ctrls");
+    const progBar = document.getElementById("progress");
+    let   startFired = false;
+
+    // Mirror pygbag's hidden progress element to our bar
+    if (progBar) {
+        new MutationObserver(() => {
+            const pct = Math.round((progBar.value / (progBar.max || 100)) * 100);
+            if (pct > parseInt(pfill.style.width || "0")) pfill.style.width = pct + "%";
+        }).observe(progBar, { attributes: true, attributeFilter: ["value"] });
+    }
+
+    // Watch for infobox text updates from pygbag Python
+    new MutationObserver(() => {
+        const txt = (infobox.textContent || "").toLowerCase();
+        if (!startFired && (txt.includes("ready") || txt.includes("click/touch") || txt.includes("please"))) {
+            pfill.style.width = "100%";
+            infobox.textContent = "✦ tap anywhere to begin ✦";
+            infobox.classList.add("ready");
+            document.addEventListener("click",    onFirstGesture, { once: true });
+            document.addEventListener("touchend", onFirstGesture, { once: true, passive: false });
+        }
+    }).observe(infobox, { childList: true, characterData: true, subtree: true });
+
+    // Watch for infobox being hidden (pygbag does this when the game is fully running)
+    new MutationObserver(() => {
+        if (infobox.style.display === "none" && !startFired) {
+            startFired = true;
+            fadeOverlay();
+        }
+    }).observe(infobox, { attributes: true, attributeFilter: ["style"] });
+
+    function onFirstGesture(e) {
+        if (e.cancelable) e.preventDefault();
+        if (window.MM) window.MM.UME = true;
+    }
+
+    function fadeOverlay() {
+        overlay.classList.add("fade-out");
+        setTimeout(() => { overlay.style.display = "none"; }, 900);
+        if (window.matchMedia("(pointer: coarse)").matches) {
+            tCtrls.classList.add("visible");
+        }
+    }
+
+    // ── Required pygbag JS callbacks ─────────────────────────────────────────
+    globalThis.__canvas_resized = () => {};
 
     async function custom_onload(debug_hidden) {
-        // this is called before anything python is loaded
-        // make your js customization here
-        console.log(__FILE__, "custom_onload")
-
-        pyconsole.hidden = debug_hidden
-        system.hidden = debug_hidden
-        transfer.hidden = debug_hidden
-        info.hidden = debug_hidden
-        box.hidden =  debug_hidden
-
-        show_infobox()
-    }
-
-    function custom_prerun(){
-        // no python main and no (MEMFS + VFS) yet.
-        console.log(__FILE__, "custom_prerun")
-
-    }
-
-    function custom_postrun(){
-        // python main and no VFS filesystem yet.
-        console.log(__FILE__, "custom_postrun")
-
-    }
-
-    function debug() {
-        // allow to gain access to dev tools from js console
-        // but only on desktop. difficult to reach when in iframe
-        python.config.debug = true
-        custom_onload(false)
-        Module.PyRun_SimpleString("shell.uptime()")
-        window_resize()
-    }
-
-    function info_inline(data){
-        document.getElementById("info").innerHTML = data
-    }
-
-    function info_online(url) {
-        // display info about current APK
-        fetch( url /*, options */)
-            .then((response) => response.text())
-            .then((html) => {
-                info_inline(html);
-        })
-        .catch((error) => {
-            console.warn(error);
+        ["pyconsole","system","transfer","info","box"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.hidden = true;
         });
     }
+    function custom_prerun()  {}
+    function custom_postrun() {}
 
-    function frame_online(url) {
-        window.frames["iframe"].location = url;
+    function window_resize() {
+        if (typeof Module !== "undefined" && typeof Module.window_resize === "function")
+            Module.window_resize();
     }
-
+    function info_inline() {}
+    function info_online() {}
+    function frame_online() {}
     </script>
 
 </body>
