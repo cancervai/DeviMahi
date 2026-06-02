@@ -166,8 +166,8 @@ config = {
     autorun : 0,
     PYBUILD : "3.12",
     fb_ar   : 1.77,
-    fb_width : "640",
-    fb_height : "360"
+    fb_width : "480",
+    fb_height : "270"
 }
 
 function show_infobox() {}
@@ -187,8 +187,16 @@ function show_infobox() {}
     <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-        width: 100%; height: 100%;
+    html {
+        /* iOS Safari: use the visual viewport height, not the layout viewport
+           which includes the collapsing address bar (the 100vh bug). */
+        height: -webkit-fill-available;
+        height: 100%;
+    }
+    body {
+        width: 100%;
+        height: 100vh;
+        height: -webkit-fill-available;
         overflow: hidden;
         background: #0d0506;
         font-family: Georgia, "Times New Roman", serif;
@@ -197,20 +205,39 @@ function show_infobox() {}
         -webkit-user-select: none;
         user-select: none;
         touch-action: none;
+        /* Prevent iOS elastic bounce-scroll */
+        position: fixed;
+        inset: 0;
     }
 
-    /* ── Game canvas: fixed full-screen, aspect-ratio letterboxed ── */
+    /* ── Game canvas ────────────────────────────────────────────────────────
+       LANDSCAPE: fills the screen perfectly (iPhone 6+ in landscape = 736×414 = 16:9)
+       PORTRAIT:  16:9 strip at the top; controls take the remaining height below. */
     canvas#canvas {
         position: fixed !important;
-        inset: 0;
-        width: 100vw !important;
-        height: 100vh !important;
-        object-fit: contain;
         background: #0d0506;
         z-index: 2;
         touch-action: none;
+        image-rendering: -webkit-optimize-contrast; /* iOS Safari crisp pixels */
         image-rendering: pixelated;
         image-rendering: crisp-edges;
+    }
+    @media (orientation: landscape) {
+        canvas#canvas {
+            inset: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: contain;
+        }
+    }
+    @media (orientation: portrait) {
+        canvas#canvas {
+            top: 0; left: 0; right: 0; bottom: auto;
+            width: 100vw !important;
+            /* 56.25vw = 100vw ÷ (16/9) — exact 16:9 height for full-width canvas */
+            height: 56.25vw !important;
+            object-fit: fill;
+        }
     }
 
     /* ── Gothic loading overlay ── */
@@ -293,14 +320,12 @@ function show_infobox() {}
     /* ── Mobile touch controls ── */
     #touch-ctrls {
         position: fixed;
-        bottom: 0; left: 0; right: 0;
-        height: 200px;
+        left: 0; right: 0;
         pointer-events: none;
         z-index: 20;
         opacity: 0;
         transition: opacity 0.6s;
-        /* only visible on touch screens */
-        display: none;
+        display: none;          /* hidden until game starts */
     }
     @media (pointer: coarse) {
         #touch-ctrls { display: block; }
@@ -309,32 +334,56 @@ function show_infobox() {}
 
     .tBtn {
         position: absolute;
-        background: rgba(100,20,20,0.32);
-        border: 1.5px solid rgba(200,168,75,0.32);
+        background: rgba(100,20,20,0.38);
+        border: 2px solid rgba(200,168,75,0.38);
         border-radius: 50%;
         color: #c8a84b;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 18px;
+        display: -webkit-flex; display: flex;
+        -webkit-align-items: center; align-items: center;
+        -webkit-justify-content: center; justify-content: center;
+        font-size: 20px;
         -webkit-tap-highlight-color: transparent;
-        touch-action: none;
+        touch-action: manipulation; /* prevents double-tap zoom on iOS */
         cursor: pointer;
+        -webkit-transition: background 0.1s, -webkit-transform 0.08s;
         transition: background 0.1s, transform 0.08s;
         will-change: transform;
+        /* Minimum Apple HIG touch target: 44×44 pt */
     }
     .tBtn.pressed, .tBtn:active {
-        background: rgba(200,168,75,0.28);
-        transform: scale(0.92);
+        background: rgba(200,168,75,0.32);
+        -webkit-transform: scale(0.90); transform: scale(0.90);
     }
 
-    /* D-pad (left side) */
-    #bL  { width:60px; height:60px; left:14px;  bottom:74px; }
-    #bR  { width:60px; height:60px; left:90px;  bottom:74px; }
-    #bU  { width:60px; height:60px; left:52px;  bottom:146px; }
+    /* ── LANDSCAPE: controls overlay at bottom of full-screen game ── */
+    @media (orientation: landscape) {
+        #touch-ctrls {
+            bottom: 0; top: auto;
+            height: 180px;
+        }
+        #bL    { width:62px; height:62px; left:14px;   bottom:76px; }
+        #bR    { width:62px; height:62px; left:90px;   bottom:76px; }
+        #bU    { width:62px; height:62px; left:52px;   bottom:150px; }
+        #bJump { width:68px; height:68px; right:88px;  bottom:98px;  font-size:22px; }
+        #bHold { width:60px; height:60px; right:14px;  bottom:120px; font-size:15px; letter-spacing:0; }
+        #bEnter{ width:52px; height:52px; right:158px; bottom:78px;  font-size:14px; }
+    }
 
-    /* Action buttons (right side) */
-    #bJump  { width:64px; height:64px; right:86px;  bottom:104px; font-size:20px; }
-    #bHold  { width:56px; height:56px; right:14px;  bottom:122px; font-size:14px; letter-spacing:0; }
-    #bEnter { width:48px; height:48px; right:154px; bottom:78px;  font-size:13px; }
+    /* ── PORTRAIT: large buttons below the game strip (iPhone 6+ = ~503px tall area) ── */
+    @media (orientation: portrait) {
+        #touch-ctrls {
+            /* starts right below the 56.25vw-tall canvas */
+            top: 56.25vw; bottom: 0;
+            height: auto;
+        }
+        /* Bigger buttons — easier to tap on a 5.5" screen with thumbs */
+        #bL    { width:88px; height:88px; left:18px;   top:50%;  margin-top:-90px; font-size:24px; }
+        #bR    { width:88px; height:88px; left:122px;  top:50%;  margin-top:-90px; font-size:24px; }
+        #bU    { width:88px; height:88px; left:70px;   top:50%;  margin-top:-196px; font-size:24px; }
+        #bJump { width:92px; height:92px; right:18px;  top:50%;  margin-top:-130px; font-size:28px; }
+        #bHold { width:80px; height:80px; right:124px; top:50%;  margin-top:-40px;  font-size:18px; letter-spacing:0; }
+        #bEnter{ width:68px; height:68px; right:18px;  top:50%;  margin-top:12px;   font-size:16px; }
+    }
 
     /* ── Hide all pygbag debug / terminal UI ── */
     #pyconsole, #system, #crt, #dlg, #html,
@@ -371,6 +420,15 @@ function show_infobox() {}
         <div class="tBtn" id="bJump" title="Jump (Space)">&#10022;</div>
         <div class="tBtn" id="bHold" title="Hold / Cuddle (H)">&#9825;</div>
         <div class="tBtn" id="bEnter" title="Dialogue (Enter)">&#9998;</div>
+    </div>
+
+    <!-- Brief landscape nudge (auto-hides after 4s) -->
+    <div id="orient-hint" style="
+        display:none; position:fixed; bottom:0; left:0; right:0;
+        background:rgba(13,5,6,0.88); color:#5a3535; text-align:center;
+        font:0.72rem Georgia,serif; letter-spacing:0.1em; padding:10px;
+        z-index:80; pointer-events:none;">
+        &#8635; Rotate for full-screen play
     </div>
 
     <!-- Invisible stubs pygbag requires to exist in the DOM -->
@@ -535,6 +593,28 @@ function show_infobox() {}
             tCtrls.classList.add("visible");
         }
     }
+
+    // ── iPhone 6 Plus: fix iOS Safari viewport height + orient hint ──────────
+    (function iosViewport() {
+        const hint = document.getElementById("orient-hint");
+        let hintTimer = null;
+
+        function update() {
+            const portrait = window.innerHeight > window.innerWidth;
+            // Show landscape nudge briefly when in portrait and game is running
+            if (portrait && hint && startFired) {
+                hint.style.display = "block";
+                clearTimeout(hintTimer);
+                hintTimer = setTimeout(() => { hint.style.display = "none"; }, 4000);
+            }
+        }
+
+        window.addEventListener("orientationchange", () => {
+            // Small delay so the browser has resized before we measure
+            setTimeout(update, 150);
+        });
+        window.addEventListener("resize", update);
+    })();
 
     // ── Required pygbag JS callbacks ─────────────────────────────────────────
     globalThis.__canvas_resized = () => {};
