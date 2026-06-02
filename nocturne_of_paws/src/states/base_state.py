@@ -18,5 +18,6 @@ class BaseState:
 
     # ── Loop ─────────────────────────────────────────────────────────────────
 
-    def update(self, dt: float): pass
-    def draw(self, surface):     pass
+    def update(self, dt: float):    pass
+    def draw(self, surface):        pass
+    def draw_overlay(self, surface): pass   # crisp HUD pass, drawn after zoom

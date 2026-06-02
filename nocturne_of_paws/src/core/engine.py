@@ -51,6 +51,11 @@ class Engine:
         self.input       = InputHandler()
         self.state_mgr   = StateManager(self)
 
+        # Cinematic zoom (post-process on the canvas). 1.0 = native.
+        # render_focus is a canvas-space point (x, y) kept centred while zoomed.
+        self.render_zoom  = 1.0
+        self.render_focus = (NATIVE_W // 2, NATIVE_H // 2)
+
         # Boot into the main menu
         self.state_mgr.push(MenuState(self))
 
@@ -88,11 +93,26 @@ class Engine:
             self.canvas.fill(DARK_MAROON)
             self.state_mgr.draw(self.canvas)
 
+            # ── Cinematic zoom (crop a focused sub-rect of the canvas) ────────
+            frame = self.canvas
+            if self.render_zoom > 1.001:
+                z      = self.render_zoom
+                crop_w = max(1, int(NATIVE_W / z))
+                crop_h = max(1, int(NATIVE_H / z))
+                fx, fy = self.render_focus
+                cx = max(0, min(int(fx - crop_w / 2), NATIVE_W - crop_w))
+                cy = max(0, min(int(fy - crop_h / 2), NATIVE_H - crop_h))
+                sub = self.canvas.subsurface(pygame.Rect(cx, cy, crop_w, crop_h))
+                frame = pygame.transform.scale(sub, (NATIVE_W, NATIVE_H))
+
+            # ── Post-zoom overlay: HUD/verse drawn crisp at native res ────────
+            self.state_mgr.draw_overlay(frame)
+
             # ── Scale canvas → display ────────────────────────────────────────
             sw, sh = self.screen.get_size()
             scaled_w = NATIVE_W * self.scale
             scaled_h = NATIVE_H * self.scale
-            scaled = pygame.transform.scale(self.canvas, (scaled_w, scaled_h))
+            scaled = pygame.transform.scale(frame, (scaled_w, scaled_h))
 
             # Centre the scaled canvas with letterbox/pillarbox in DARK_MAROON
             self.screen.fill(OBSIDIAN)

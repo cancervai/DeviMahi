@@ -6,6 +6,7 @@ The sprite is procedurally drawn (8x8 pixel art cat silhouette) until
 real sprites are loaded from /assets/sprites/.
 """
 
+import math
 import pygame
 
 GRAVITY       = 480.0
@@ -33,6 +34,11 @@ class PlayerMasum:
         self._anim_t    = 0.0
         self._frame     = 0
         self._sprite    = self._build_sprite()
+
+        # Cinematic / mechanic state
+        self.cuddling   = False    # set by cuddle controller
+        self.frozen     = False    # disables movement during cutscenes
+        self._lantern_t = 0.0      # tail-lantern swing phase
 
     # ── Sprite (procedural pixel art) ─────────────────────────────────────────
 
@@ -71,6 +77,15 @@ class PlayerMasum:
     def update(self, dt: float, inp, floors: list[pygame.Rect]):
         self._jump_buf  = max(0.0, self._jump_buf  - dt)
         self._coyote    = max(0.0, self._coyote    - dt)
+        self._lantern_t += dt
+
+        # When cuddling or frozen, hold position and pose — no input.
+        if self.cuddling or self.frozen:
+            self._vx = 0.0
+            self._vy += GRAVITY * dt
+            self._move(dt, floors)
+            self._frame = 0
+            return
 
         # Horizontal movement
         dx, _ = inp.get_axis()
@@ -138,6 +153,20 @@ class PlayerMasum:
 
     def draw(self, surface: pygame.Surface, camera):
         sx, sy = camera.world_to_screen(self.rect.x, self.rect.y)
+
+        # ── Swinging tail-lantern: amber light that casts a soft pool ─────────
+        swing = math.sin(self._lantern_t * 3.0) * 4
+        lx = sx + (8 if self._facing == 1 else 0) + int(swing)
+        ly = sy + 4
+        glow = pygame.Surface((30, 30), pygame.SRCALPHA)
+        for r in range(14, 0, -1):
+            a = int(10 * (r / 14))
+            pygame.draw.circle(glow, (235, 175, 70, a), (15, 15), r)
+        surface.blit(glow, (lx - 15, ly - 15))
+        # lantern bead
+        surface.set_at((max(0, min(surface.get_width() - 1, lx)),
+                        max(0, min(surface.get_height() - 1, ly))), (255, 220, 120))
+
         sprite = self._sprite[self._frame]
         if self._facing == -1:
             sprite = pygame.transform.flip(sprite, True, False)

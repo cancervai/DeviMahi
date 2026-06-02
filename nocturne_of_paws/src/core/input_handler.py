@@ -18,6 +18,7 @@ DEFAULT_BINDINGS = {
     "interact":   [pygame.K_RETURN, pygame.K_e, pygame.K_x],
     "run":        [pygame.K_LSHIFT, pygame.K_RSHIFT],
     "pause":      [pygame.K_ESCAPE, pygame.K_p],
+    "rest":       [pygame.K_h, pygame.K_LCTRL],   # hold-to-cuddle / anchor shield
 }
 
 

@@ -43,6 +43,11 @@ class StateManager:
         for state in self._stack:
             state.draw(surface)
 
+    def draw_overlay(self, surface):
+        # Post-zoom HUD pass — only the active (top) state owns the overlay.
+        if self._stack:
+            self._stack[-1].draw_overlay(surface)
+
     @property
     def current(self):
         return self._stack[-1] if self._stack else None
