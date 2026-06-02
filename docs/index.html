@@ -172,6 +172,50 @@ config = {
 
 function show_infobox() {}
 
+// ── Early CDN failure detection ───────────────────────────────────────────────
+// pygbag's module script (id="site") errors immediately if the CDN is blocked —
+// e.g. Brave Shields, firewall, or network issue. Catch it and show a fix within seconds.
+(function detectCDNBlock() {
+  const siteScript = document.getElementById("site");
+  if (!siteScript) return;
+
+  // module script fires "error" if src fails to load
+  siteScript.addEventListener("error", function() {
+    window.__cdnBlocked = true;
+    // Give the page a moment to render, then show the error
+    setTimeout(function() {
+      if (window.startFired) return;
+      var ib = document.getElementById("infobox");
+      var hint = document.getElementById("first-load-hint");
+      var bar  = document.getElementById("px-bar");
+      var safariBtn = document.getElementById("safari-open-btn");
+      if (ib)   { ib.textContent = "> CDN BLOCKED"; ib.className = "error"; }
+      if (hint) hint.textContent = "BRAVE / ADBLOCK IS BLOCKING\nTHE GAME RUNTIME.\nDISABLE SHIELDS FOR THIS SITE\nOR OPEN IN SAFARI BELOW.";
+      if (bar)  bar.textContent  = "████████████████ !!";
+      if (safariBtn) safariBtn.style.display = "inline-block";
+    }, 800);
+  });
+
+  // Fallback: if nothing from pygbag after 15 s, CDN is probably blocked/slow
+  setTimeout(function() {
+    if (window.startFired || window.__pygbagStarted) return;
+    var ib = document.getElementById("infobox");
+    var hint = document.getElementById("first-load-hint");
+    var safariBtn = document.getElementById("safari-open-btn");
+    var ua = navigator.userAgent.toLowerCase();
+    var isBrave = (ua.indexOf("brave") > -1) ||
+                  (typeof navigator.brave !== "undefined" && navigator.brave.isBrave);
+    if (ib) {
+      ib.textContent = isBrave ? "> BRAVE SHIELDS BLOCKING CDN" : "> CDN NOT RESPONDING";
+      ib.className = "error";
+    }
+    if (hint) hint.textContent = isBrave
+      ? "DISABLE BRAVE SHIELDS FOR\nCANCERVAI.GITHUB.IO\nOR OPEN IN SAFARI:"
+      : "CDN FAILED TO LOAD.\nTRY SAFARI OR CHROME:";
+    if (safariBtn) safariBtn.style.display = "inline-block";
+  }, 15000);
+})();
+
 </script>
 
     <title>Nocturne of Paws</title>
@@ -414,6 +458,15 @@ function show_infobox() {}
         <div id="px-bar">&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;</div>
         <div id="infobox">&gt; LOADING...</div>
         <div id="first-load-hint">1ST VISIT: ~2 MIN (40MB DOWNLOAD)<br>CACHED AFTER &mdash; INSTANT NEXT TIME</div>
+        <!-- shown only on CDN block / browser error -->
+        <a id="safari-open-btn"
+           href="x-safari-https://cancervai.github.io/DeviMahi/"
+           style="display:none; font-family:'Press Start 2P',monospace; font-size:0.55rem;
+                  color:#000; background:#c8a84b; border:3px solid #f0c060;
+                  box-shadow:3px 3px 0 #3a1a00; padding:10px 16px;
+                  text-decoration:none; letter-spacing:0.08em; margin-top:4px;">
+            [ OPEN IN SAFARI ]
+        </a>
     </div>
 
     <!-- Mobile touch controls (pointer:coarse only, fades in after game starts) -->
@@ -512,36 +565,33 @@ function show_infobox() {}
     }
     setBar(0);
 
+    // Expose startFired globally so detectCDNBlock() can read it
+    window.__pygbagStarted = false;
+
     // Timed stage messages — tells user exactly what's happening
     const STAGES = [
-        [0,    "> LOADING..."],
-        [8000, "> DOWNLOADING\n> PYTHON RUNTIME"],
-        [25000,"> COMPILING WASM\n> (A8 IS SLOW)"],
-        [60000,"> STILL GOING...\n> HANG TIGHT"],
-        [120000,"> ALMOST THERE...\n> DON'T CLOSE"],
-        [300000,"> TIMED OUT\n> TRY REFRESHING"],  // 5-min hard timeout
+        [0,     "> LOADING..."],
+        [8000,  "> DOWNLOADING\n> PYTHON RUNTIME"],
+        [25000, "> COMPILING WASM"],
+        [60000, "> STILL GOING...\n> HANG TIGHT"],
+        [120000,"> TIMED OUT\n> TRY REFRESHING"],   // 2-min hard timeout
     ];
-    let stageIdx = 0;
-    // Fake-crawl bar: 0→65% over 120s before real data kicks in
+    // Fake-crawl bar: 0→65% over 90s before real data kicks in
     let fakePct = 0;
     const ticker = setInterval(() => {
         if (startFired) { clearInterval(ticker); return; }
-        fakePct = Math.min(fakePct + 0.54, 65);
+        fakePct = Math.min(fakePct + 0.72, 65);
         if (fakePct > realPct) setBar(fakePct);
-        // Advance stage messages
-        if (stageIdx < STAGES.length - 1) {
-            // Stages are time-based — handled by setTimeout below
-        }
     }, 1000);
     STAGES.forEach(([ms, msg]) => {
         setTimeout(() => {
-            if (!startFired) {
+            if (!startFired && !window.__cdnBlocked) {
                 infobox.textContent = msg;
-                if (ms >= 300000) {
+                if (ms >= 120000) {
                     infobox.classList.add("error");
                     clearInterval(ticker);
-                    setBar(0);
                     hint.textContent = "TRY: CLOSE & REOPEN IN SAFARI";
+                    document.getElementById("safari-open-btn").style.display = "inline-block";
                 }
             }
         }, ms);
