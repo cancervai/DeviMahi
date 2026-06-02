@@ -132,17 +132,23 @@ asyncio.run( custom_site() )
 // ── Cross-Origin Isolation via service worker ────────────────────────────────
 // GitHub Pages cannot set COOP/COEP response headers.
 // Without them SharedArrayBuffer is unavailable → pygbag hangs on a blank screen.
-// The service worker intercepts every fetch (including the main document on reload)
-// and injects those headers so the page becomes cross-origin isolated.
+// The service worker caches CDN assets (~40 MB) so every load after the first
+// is instant, and it injects COOP/COEP so WASM works on GitHub Pages.
 if (!self.crossOriginIsolated && "serviceWorker" in navigator) {
-  navigator.serviceWorker.register("coi-serviceworker.js").then(reg => {
-    function reload() { location.replace(location.href); }
-    if (reg.active) { reload(); return; }
-    (reg.installing || reg.waiting).addEventListener("statechange", e => {
-      if (e.target.state === "activated") reload();
-    });
-    navigator.serviceWorker.addEventListener("controllerchange", reload);
-  }).catch(e => console.warn("COI service-worker:", e));
+  // Guard: at most 2 silent reloads per session to avoid infinite loops
+  const reloads = +sessionStorage.getItem("coi-r") || 0;
+  if (reloads < 2) {
+    navigator.serviceWorker.register("coi-serviceworker.js").then(reg => {
+      function reload() {
+        sessionStorage.setItem("coi-r", reloads + 1);
+        location.replace(location.href);
+      }
+      if (reg.active) { reload(); return; }
+      const sw = reg.installing || reg.waiting;
+      if (sw) sw.addEventListener("statechange", e => { if (e.target.state === "activated") reload(); });
+      navigator.serviceWorker.addEventListener("controllerchange", reload);
+    }).catch(e => console.warn("COI service-worker:", e));
+  }
 }
 
 // ── pygbag config ─────────────────────────────────────────────────────────────
@@ -160,8 +166,8 @@ config = {
     autorun : 0,
     PYBUILD : "3.12",
     fb_ar   : 1.77,
-    fb_width : "960",
-    fb_height : "540"
+    fb_width : "640",
+    fb_height : "360"
 }
 
 function show_infobox() {}
@@ -274,6 +280,16 @@ function show_infobox() {}
     }
     @keyframes glow { 0%,100%{opacity:0.25} 50%{opacity:1} }
 
+    #first-load-hint {
+        font-size: clamp(0.58rem, 2.2vw, 0.7rem);
+        color: #3a2020;
+        letter-spacing: 0.04em;
+        text-align: center;
+        line-height: 1.6;
+        max-width: 300px;
+        padding: 0 16px;
+    }
+
     /* ── Mobile touch controls ── */
     #touch-ctrls {
         position: fixed;
@@ -344,6 +360,7 @@ function show_infobox() {}
         <div class="game-sub">Velvet &middot; Crimson &middot; Stardust</div>
         <div class="bar-wrap"><div class="bar-fill" id="pfill"></div></div>
         <div id="infobox">Summoning the velvet night&hellip;</div>
+        <div id="first-load-hint">First visit downloads the Python runtime (~40 MB).<br>Takes 1&ndash;3 min on mobile. Cached instantly after.</div>
     </div>
 
     <!-- Mobile touch controls (pointer:coarse only, fades in after game starts) -->
@@ -416,22 +433,78 @@ function show_infobox() {}
     const pfill   = document.getElementById("pfill");
     const infobox = document.getElementById("infobox");
     const overlay = document.getElementById("loading-overlay");
+    const hint    = document.getElementById("first-load-hint");
     const tCtrls  = document.getElementById("touch-ctrls");
     const progBar = document.getElementById("progress");
     let   startFired = false;
+    let   pygbagUpdated = false;  // true once pygbag writes to infobox
 
-    // Mirror pygbag's hidden progress element to our bar
+    // ── Cycling loading messages (shown until pygbag sends its own) ─────────
+    const MSGS = [
+        "Summoning the velvet night…",
+        "Weaving shadows into silk…",
+        "Calling the moon-cats home…",
+        "Brewing stardust and crimson…",
+        "Unfurling the gothic scroll…",
+        "Lighting candle-paths…",
+        "Binding shadow to parchment…",
+        "Still loading — hang tight…",
+    ];
+    let msgIdx = 0;
+    const msgTimer = setInterval(() => {
+        if (!pygbagUpdated && !startFired) {
+            infobox.textContent = MSGS[msgIdx % MSGS.length];
+            msgIdx++;
+        } else {
+            clearInterval(msgTimer);
+        }
+    }, 4000);
+
+    // ── Animate the progress bar even before pygbag sends real data ─────────
+    // Fake-crawl from 0 → 60 % over 90 s so bar moves from the start.
+    let fakeProgress = 0;
+    const fakeTimer = setInterval(() => {
+        if (startFired) { clearInterval(fakeTimer); return; }
+        fakeProgress = Math.min(fakeProgress + 0.67, 60);  // ~60% over 90s
+        const cur = parseFloat(pfill.style.width) || 0;
+        if (fakeProgress > cur) pfill.style.width = fakeProgress.toFixed(1) + "%";
+    }, 1000);
+
+    // Mirror pygbag's real progress element (overrides fake when available)
     if (progBar) {
         new MutationObserver(() => {
             const pct = Math.round((progBar.value / (progBar.max || 100)) * 100);
-            if (pct > parseInt(pfill.style.width || "0")) pfill.style.width = pct + "%";
+            if (pct > 0) {
+                const cur = parseFloat(pfill.style.width) || 0;
+                if (pct > cur) pfill.style.width = pct + "%";
+            }
         }).observe(progBar, { attributes: true, attributeFilter: ["value"] });
+    }
+
+    // Mirror status div (pygbag writes "Downloading..." etc. here)
+    const statusEl = document.getElementById("status");
+    if (statusEl) {
+        new MutationObserver(() => {
+            const txt = (statusEl.textContent || "").trim();
+            if (txt && !pygbagUpdated) {
+                pygbagUpdated = true;
+                hint.style.display = "none";  // hide first-load hint once real status shows
+                infobox.textContent = txt;
+            }
+        }).observe(statusEl, { childList: true, characterData: true, subtree: true });
     }
 
     // Watch for infobox text updates from pygbag Python
     new MutationObserver(() => {
         const txt = (infobox.textContent || "").toLowerCase();
+        // Only react to pygbag's own messages (not our cycling messages)
+        if (txt.includes("installing") || txt.includes("loading") || txt.includes("extracting")) {
+            pygbagUpdated = true;
+            hint.style.display = "none";
+            pfill.style.width = "75%";
+        }
         if (!startFired && (txt.includes("ready") || txt.includes("click/touch") || txt.includes("please"))) {
+            clearInterval(fakeTimer);
             pfill.style.width = "100%";
             infobox.textContent = "✦ tap anywhere to begin ✦";
             infobox.classList.add("ready");
@@ -440,10 +513,12 @@ function show_infobox() {}
         }
     }).observe(infobox, { childList: true, characterData: true, subtree: true });
 
-    // Watch for infobox being hidden (pygbag does this when the game is fully running)
+    // Watch for infobox being hidden (pygbag hides it when the game is fully running)
     new MutationObserver(() => {
         if (infobox.style.display === "none" && !startFired) {
             startFired = true;
+            clearInterval(fakeTimer);
+            clearInterval(msgTimer);
             fadeOverlay();
         }
     }).observe(infobox, { attributes: true, attributeFilter: ["style"] });
