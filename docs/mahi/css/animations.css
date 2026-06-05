@@ -1,0 +1,80 @@
+/* ============================================================
+   Keyframes & motion — DeviMahi
+   ============================================================ */
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@keyframes petalPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.12)}
+}
+
+@keyframes drift{
+  from{transform:translateX(-10vw)}
+  to{transform:translateX(110vw)}
+}
+
+@keyframes bob{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(5px)}
+}
+
+@keyframes scrolldot{
+  0%{opacity:0;transform:translateY(0)}
+  30%{opacity:1}
+  100%{opacity:0;transform:translateY(20px)}
+}
+
+@keyframes halo{
+  0%,100%{opacity:.6;transform:scale(1)}
+  50%{opacity:1;transform:scale(1.08)}
+}
+
+/* sticker pop — staggered via inline delay in JS/HTML order */
+.sticker.pop{animation:stickerPop .6s cubic-bezier(.2,1.6,.4,1) both}
+.sticker.pop:nth-child(1){animation-delay:.0s}
+.sticker.pop:nth-child(2){animation-delay:.12s}
+.sticker.pop:nth-child(3){animation-delay:.24s}
+.sticker.pop:nth-child(4){animation-delay:.36s}
+.sticker.pop:nth-child(5){animation-delay:.48s}
+@keyframes stickerPop{
+  0%{transform:scale(0) rotate(-30deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+/* gentle idle wiggle once revealed */
+.sticker{animation:wiggle 3s ease-in-out infinite}
+.sticker:nth-child(even){animation-delay:.6s}
+@keyframes wiggle{
+  0%,100%{transform:translateY(0) rotate(-4deg)}
+  50%{transform:translateY(-8px) rotate(4deg)}
+}
+
+@keyframes popIn{
+  0%{opacity:0;transform:scale(.8)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+/* floating bouquet / hero content drift */
+.hero-content{animation:floaty 7s ease-in-out infinite}
+@keyframes floaty{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+}
+
+/* flower idle sway after bloom (added by JS as .bloomed) */
+.flower.bloomed{transform:translate(-50%,-50%) scale(1);transition:transform .6s cubic-bezier(.2,1.6,.4,1)}
+.flower.bloomed .head{animation:sway 4s ease-in-out infinite;transform-origin:center bottom}
+@keyframes sway{
+  0%,100%{transform:rotate(-3deg)}
+  50%{transform:rotate(3deg)}
+}
+
+/* relic / shrine subtle breathe */
+.relic{animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-6px) scale(1.01)}
+}
+
+/* burst particle used by JS for bow + petals (created dynamically) */
+.burst-piece{position:fixed;z-index:90;pointer-events:none;font-size:1.4rem;will-change:transform,opacity}
