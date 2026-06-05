@@ -1,5 +1,5 @@
 /* ============================================================
-   main.js — loader, bouquet, shrine, serotonin game, audio,
+   main.js — loader, bouquet, shrine, the little game, audio,
    compliments, finale controls.  DeviMahi 🌸
    ============================================================ */
 (function () {
@@ -43,16 +43,16 @@
     if (!wrap) return;
 
     const REASONS = [
-      ['🌷', "Your laugh resets my entire nervous system. 0 to serotonin in one second."],
-      ['🌸', "You're so cute it's frankly a safety hazard. I've filed reports."],
-      ['🌹', "You make 'home' a person, not a place. Specifically: you."],
-      ['🌻', "When you're happy, the whole room gets a software update."],
-      ['🌼', "You're the calm AND the butterflies. Pick a lane — actually no, keep both."],
-      ['💐', "I'd cross any swamp, fight any frog, for one of your smiles. (game reference, iykyk)"],
-      ['🪻', "Your kindness could end wars. Goddess of Peace was NOT an exaggeration."],
-      ['🌺', "You hold kittens like a Ghibli protagonist and my heart like it's nothing."],
-      ['🏵️', "Even your worst days are better company than anyone's best."],
-      ['🌷', "You + me = the only equation I ever want to solve. Forever."],
+      ['🥀', "i think about your mouth more than i'll ever admit in writing."],
+      ['🌹', "your laugh walks into the room and undresses my bad mood."],
+      ['🖤', "i'd cancel plans, gods, and whole timelines just to watch you breathe."],
+      ['🌙', "you're the only prayer i say with my eyes open."],
+      ['🍷', "some nights i just want to ruin your lipstick. respectfully. mostly."],
+      ['🐈‍⬛', "you call me your evil spirit, then wonder why i won't leave. i live here now."],
+      ['🔥', "i behave in public so i can misbehave with you in private."],
+      ['🌑', "you make 'come over' sound like scripture, and i'm a devout man."],
+      ['💋', "i'm not clingy. you're just better than oxygen and i'd like to breathe."],
+      ['🥀', "you, me, no plans, the lights low — that's the whole poem."],
     ];
 
     const headColors = ['#e79bb0', '#e9b949', '#f4c2cf', '#c96a86', '#f0a6c0', '#ffd27a'];
@@ -126,12 +126,12 @@
       localStorage.setItem('mahi_bows', String(n));
       render();
       const r = e.currentTarget.getBoundingClientRect();
-      FX.burst(r.left + r.width / 2, r.top, ['🛐', '👑', '🌹', '✨', '🦶'], 16);
+      FX.burst(r.left + r.width / 2, r.top, ['🖤', '🥀', '🌙', '✨', '🦶'], 16);
       const lines = [
-        'Devotion recorded. The feet have noted your loyalty. 🙏',
-        'Blessed. You may now ascend 0.2 cm spiritually.',
-        'The Holy Feet are pleased. Continue.',
-        'Your knees are sacrificed for a noble cause.'
+        'noted. the feet acknowledge your devotion. 🖤',
+        'you kneel suspiciously well. we don\'t ask questions here.',
+        'ten toes blessed you back. allegedly with their tongue.',
+        'another knee sacrificed to a worthy, worthy cause.'
       ];
       FX.toast(lines[n % lines.length]);
     });
@@ -141,7 +141,7 @@
   })();
 
   /* ============================================================
-     3 · SEROTONIN STATION — catch-the-hearts mini-game
+     3 · THE LITTLE GAME — catch-the-hearts mini-game
      ============================================================ */
   (function game() {
     const arena = document.getElementById('gameArena');
@@ -170,7 +170,7 @@
     startBtn && startBtn.addEventListener('click', () => playing ? null : start());
 
     function start() {
-      playing = true; startBtn.textContent = 'Catching… 💘';
+      playing = true; startBtn.textContent = 'catching… 🖤';
       spawn();
       loop();
     }
@@ -221,9 +221,9 @@
       clearTimeout(spawnTimer);
       cancelAnimationFrame(raf);
       items.forEach(el => el.remove()); items = [];
-      startBtn.textContent = 'Maxed out 💛';
+      startBtn.textContent = 'all yours 🖤';
       if (secret) { secret.hidden = false; secret.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-      FX.toast('100%! You filled the meter AND my heart. 💛');
+      FX.toast('full. you filled it without even trying — you\'ve been doing that to me since night one. 🖤');
       if (window.Petals) window.Petals.rain(80);
     }
   })();
@@ -292,36 +292,37 @@
   })();
 
   /* ============================================================
-     5 · COMPLIMENT GENERATOR (floating button, injected)
+     5 · "HERE'S WHAT I'M THINKING RN" (floating button, injected)
      ============================================================ */
-  (function compliments() {
+  (function thinking() {
     const lines = [
-      "Scientific fact: you're the prettiest person to ever exist. Peer-reviewed by me.",
-      "If loving you were a job, I'd work unpaid overtime forever. 💼",
-      "You're 90% sunshine, 10% chaos, and 100% mine. Math checks out.",
-      "Warning: prolonged eye contact with Mahi may cause permanent happiness.",
-      "You make my heart do that dumb little flip. Every. Single. Time.",
-      "Goddess of Love & Peace? Babe, you're overqualified.",
-      "I'd choose you in every lifetime, even the ones where I'm a frog. 🐸",
-      "You + a bouquet = redundant. You ARE the bouquet.",
-      "On a scale of 1 to 10, you're an entire ecosystem of cuteness.",
-      "Plot twist: I was the lucky one all along. 💛"
+      "thinking about your collarbones again. anyway — how was your day.",
+      "wondering if you're wearing the thing i like. no reason.",
+      "i could be productive. or i could think about your thighs. it isn't close.",
+      "composing a very respectful poem about the small of your back.",
+      "you crossed my mind. you usually do. you also usually stay a while.",
+      "imagining you in my hoodie and nothing else makes a sound in my head.",
+      "50% missing you, 50% plotting, 100% yours.",
+      "we should cancel tonight. i have a proposal. it's just you.",
+      "your neck. that's the whole thought. that's it.",
+      "was being normal, then remembered you exist. ruined. happily."
     ];
     const btn = document.createElement('button');
-    btn.id = 'complimentBtn';
-    btn.textContent = '✨ Need a compliment?';
+    btn.id = 'thinkingBtn';
+    btn.textContent = "here's what i'm thinking rn 🐈‍⬛";
     Object.assign(btn.style, {
       position: 'fixed', left: '14px', bottom: '14px', zIndex: 50,
-      fontFamily: 'Quicksand, sans-serif', fontWeight: 700, fontSize: '.85rem',
-      color: '#fff', border: 'none', cursor: 'pointer', padding: '.7rem 1rem',
-      borderRadius: '99px', background: 'linear-gradient(120deg,#c96a86,#caa033)',
-      boxShadow: '0 8px 20px rgba(74,59,70,.25)'
+      fontFamily: 'Quicksand, sans-serif', fontWeight: 700, fontSize: '.82rem',
+      color: '#fbeef3', border: '1px solid rgba(255,255,255,.12)', cursor: 'pointer',
+      padding: '.7rem 1rem', borderRadius: '99px', maxWidth: '70vw',
+      background: 'linear-gradient(120deg,#8a3158,#bd9540)',
+      boxShadow: '0 8px 22px rgba(0,0,0,.5)', WebkitAppearance: 'none'
     });
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', () => {
       const msg = lines[(Math.random() * lines.length) | 0];
-      FX.toast(msg, 3400);
+      FX.toast(msg, 3600);
       const r = btn.getBoundingClientRect();
-      FX.burst(r.left + r.width / 2, r.top, ['✨', '💛', '🌸'], 10);
+      FX.burst(r.left + r.width / 2, r.top, ['🖤', '🥀', '🌙'], 10);
     });
     document.body.appendChild(btn);
   })();
@@ -335,8 +336,8 @@
     rainBtn && rainBtn.addEventListener('click', (e) => {
       if (window.Petals) window.Petals.rain(120);
       const r = e.currentTarget.getBoundingClientRect();
-      FX.burst(r.left + r.width / 2, r.top, ['🌹', '🌸', '💐', '💛'], 24);
-      FX.toast('🌹 for you. and you. and also you. all of you, Mahi.');
+      FX.burst(r.left + r.width / 2, r.top, ['🥀', '🌹', '🖤', '🌙'], 24);
+      FX.toast('🥀 for you. and the version of you in every dark i\'ve imagined.');
     });
     replayBtn && replayBtn.addEventListener('click', () => {
       if (window.__lenis) window.__lenis.scrollTo(0, { duration: 2 });
