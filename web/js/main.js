@@ -160,9 +160,11 @@
       let x = clientX - r.left;
       x = Math.max(28, Math.min(r.width - 28, x));
       basket.style.left = x + 'px';
+      basket.style.webkitTransform = 'translateX(-50%)';
       basket.style.transform = 'translateX(-50%)';
     }
-    arena.addEventListener('pointermove', (e) => moveBasket(e.clientX), { passive: true });
+    // mouse (desktop) + touch (phones); iOS Safari 12 has no Pointer Events
+    arena.addEventListener('mousemove', (e) => moveBasket(e.clientX), { passive: true });
     arena.addEventListener('touchmove', (e) => { if (e.touches[0]) moveBasket(e.touches[0].clientX); }, { passive: true });
 
     startBtn && startBtn.addEventListener('click', () => playing ? null : start());
@@ -196,6 +198,7 @@
         const el = items[i];
         let y = parseFloat(el.dataset.y) + parseFloat(el.dataset.v);
         el.dataset.y = y;
+        el.style.webkitTransform = `translateY(${y}px)`;
         el.style.transform = `translateY(${y}px)`;
         const x = parseFloat(el.dataset.x);
         if (y > by - 24 && y < by + 30 && Math.abs(x - bx) < 46) {

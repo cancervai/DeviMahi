@@ -5,6 +5,7 @@
    ============================================================ */
 (function () {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse = window.matchMedia('(pointer: coarse)').matches; // phones: native scroll is smoother
   const hasGSAP = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
 
   // Fallback: if libs failed to load, just show everything.
@@ -19,7 +20,7 @@
 
   /* ---------- Lenis smooth scroll ---------- */
   let lenis = null;
-  if (!reduce && typeof window.Lenis !== 'undefined') {
+  if (!reduce && !coarse && typeof window.Lenis !== 'undefined') {
     lenis = new Lenis({ duration: 1.1, smoothWheel: true, lerp: 0.1 });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((t) => lenis.raf(t * 1000));
@@ -60,8 +61,8 @@
   // also run once now in case 'load' already fired
   if (document.readyState === 'complete') heroIn();
 
-  /* ---------- hero parallax (data-depth) ---------- */
-  if (!reduce) {
+  /* ---------- hero parallax (data-depth) — desktop only (cheap on phones) ---------- */
+  if (!reduce && !coarse) {
     gsap.utils.toArray('#hero [data-depth]').forEach((layer) => {
       const depth = parseFloat(layer.dataset.depth) || 0.2;
       gsap.to(layer, {
