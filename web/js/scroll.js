@@ -1,7 +1,7 @@
 /* ============================================================
    scroll.js — Lenis smooth scroll + GSAP ScrollTrigger.
    Handles: reveals, parallax, hero title, typewriter, and the
-   scroll-linked Oxytocin meter. Degrades gracefully if CDNs fail.
+   scroll-linked Desire meter. Degrades gracefully if CDNs fail.
    ============================================================ */
 (function () {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -11,7 +11,7 @@
   // Fallback: if libs failed to load, just show everything.
   if (!hasGSAP) {
     document.querySelectorAll('.reveal').forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
-    setupOxytocinFallback();
+    setupDesireFallback();
     setupTypewriterFallback();
     return;
   }
@@ -106,7 +106,7 @@
     });
   }
 
-  /* ---------- Oxytocin meter, linked to scroll progress ---------- */
+  /* ---------- Desire meter, linked to scroll progress ---------- */
   const lmFill = document.getElementById('lmFill');
   const lmPct = document.getElementById('lmPct');
   ScrollTrigger.create({
@@ -123,7 +123,7 @@
   ScrollTrigger.refresh();
 
   /* ---------- fallbacks (no GSAP) ---------- */
-  function setupOxytocinFallback() {
+  function setupDesireFallback() {
     const lmFill = document.getElementById('lmFill');
     const lmPct = document.getElementById('lmPct');
     const onScroll = () => {

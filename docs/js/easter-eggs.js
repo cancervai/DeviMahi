@@ -23,7 +23,7 @@
   function setTransform(el, v) { el.style.webkitTransform = v; el.style.transform = v; }
   function burst(x, y, emojis, count) {
     if (reduce) return;
-    emojis = emojis || ['💛', '🌸', '🌷', '✨', '💐'];
+    emojis = emojis || ['🖤', '🥀', '🌹', '✨', '🌙'];
     // fewer pieces on phones to keep the A8 GPU happy
     count = count || 18;
     if (coarse) count = Math.min(count, 10);
@@ -80,7 +80,7 @@
     });
     function heart(x, y, s, a) {
       ctx.save(); ctx.translate(x, y); ctx.scale(s / 16, s / 16); ctx.globalAlpha = a;
-      ctx.fillStyle = '#e79bb0';
+      ctx.fillStyle = '#d987a4';
       ctx.beginPath();
       ctx.moveTo(0, 4);
       ctx.bezierCurveTo(-8, -6, -16, 4, 0, 16);
@@ -115,19 +115,19 @@
       typed = (typed + e.key.toLowerCase()).slice(-4);
       if (typed === 'love') {
         typed = '';
-        burst(window.innerWidth / 2, window.innerHeight / 2, ['💛', '❤️', '🌹', '💐', '✨'], 30);
-        toast('I love you too, Mahi. Infinitely. 💛');
+        burst(window.innerWidth / 2, window.innerHeight / 2, ['🖤', '🥀', '🌹', '🌙', '✨'], 30);
+        toast('i love you too, Mahi. infinitely. in every dark. 🖤');
       }
     }
   });
 
   function konamiParty() {
-    toast('🎉 KONAMI! secret goddess buff unlocked: +999 charisma (you already had it)');
+    toast('🌙 you kissed the moon. it kissed back.');
     if (window.Petals) window.Petals.rain(120);
     var cx = window.innerWidth / 2;
     for (var i = 0; i < 5; i++) {
       (function (i) {
-        setTimeout(function () { burst(cx + (i - 2) * 80, window.innerHeight * 0.4, ['👑', '🌸', '💛', '✨', '🦋'], 18); }, i * 160);
+        setTimeout(function () { burst(cx + (i - 2) * 80, window.innerHeight * 0.4, ['🌙', '🥀', '🖤', '✨', '🐈‍⬛'], 18); }, i * 160);
       })(i);
     }
   }

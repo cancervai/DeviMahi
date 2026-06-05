@@ -1,44 +1,42 @@
-# DeviMahi · "Goddess of Love & Peace" 🌸
+# For Mahi · after dark 🖤
 
-A hand-built, hyper-animated **Studio-Ghibli-style romantic storytelling website** for Mahi.
-Scroll-driven journey of bouquets, jokes, worship, memes, and one very serious shrine —
-engineered to hit maximum oxytocin & serotonin. 💛
+A hand-built, hyper-animated **love letter for Mahi** — written in the dark, in poetry,
+with very little dignity. A moody, candlelit, scroll-driven journey: bouquets, worship,
+nonchalant jokes, and one very serious shrine.
 
 ## What's inside
 - **Pure static site** — no build step. Just open `index.html`.
-- **Smooth scroll** (Lenis) + **scroll animations** (GSAP ScrollTrigger), loaded from CDN.
-- **Custom canvas petal system** (`js/petals.js`) that reacts to the cursor.
-- **Heart-trail cursor, konami code, and a hidden `love` typing trigger** (`js/easter-eggs.js`).
-- **Interactive bouquet**, **Shrine of the Holy Feet** (comedy), **meme gallery**,
-  a **catch-the-hearts mini-game**, a **WebAudio music-box toggle**, and a floating
-  **compliment generator** (`js/main.js`).
-- **Mobile-first & responsive**, with a `prefers-reduced-motion` fallback.
+- **Smooth scroll** (Lenis, desktop only) + **scroll animations** (GSAP ScrollTrigger), from CDN.
+- **Custom canvas petal system** that reacts to cursor / touch.
+- **Heart-trail cursor (desktop), konami code, hidden `love` trigger** (`js/easter-eggs.js`).
+- **Interactive bouquet** of things he doesn't say out loud, the **Shrine of the Holy Feet**,
+  a **catch-what-i-throw-you** mini-game, a **music-box toggle**, and a floating
+  **"here's what i'm thinking rn"** button (`js/main.js`).
 
 ## The journey
-Loader → Hero invocation → Ch.I How It Began → Ch.II Bouquet of Reasons →
-Ch.III The Goddess Revealed → Ch.IV Shrine of the Holy Feet →
-Ch.V Hall of Memes → Ch.VI Serotonin Station (mini-game) → Finale.
+Loader → Hero → **i.** how the night began → **ii.** a bouquet of things i don't say out loud →
+**iii.** the goddess, unveiled → **iv.** the shrine of the holy feet → **v.** catch what i throw you →
+finale.
+
+## Built for iPhone 6 Plus / iOS Safari 12
+Mobile-first and tuned for an older A8 device. No CSS feature that Safari 12 lacks
+(`inset`, flex `gap`, `aspect-ratio`, `clamp()`, `100svh`, unprefixed `backdrop-filter`)
+is used without a fallback; no Pointer Events or WAAPI in the JS; smooth-scroll, parallax
+and the heart-trail are disabled on touch devices; particle counts are trimmed. The design
+is unchanged — it just runs everywhere. A `prefers-reduced-motion` fallback is included.
 
 ## Run locally
 ```bash
 cd web
-python3 -m http.server 8000
-# open http://localhost:8000
+python3 -m http.server 8000   # open http://localhost:8000
 ```
 
-## Deploy (same options as the game in ../DEPLOY.md)
-It's a static folder, so any static host works:
-- **GitHub Pages**: point Pages at this folder (or copy its contents to your Pages branch/dir).
-- **Vercel / Netlify**: set the output/publish directory to `web/`.
-
-## Assets
-- `assets/photos/` — Mahi's real photos, given a soft painterly "Ghibli" CSS treatment.
-- `assets/memes/` — the cat-and-fan meme and the shrine relic.
-- AI-generated Ghibli scenes can be dropped into `assets/img/` later (the layout already
-  leaves room); the current scenery is hand-built in SVG/CSS so it works fully offline.
+## Deploy
+Static folder — any static host works. In this repo it's published via GitHub Pages
+(served from `/docs`), with the small WASM game living at `/game/`.
 
 ## Easter eggs (don't tell Mahi)
-- Type **`love`** anywhere → heart explosion + secret message.
-- **Konami code** (↑↑↓↓←→←→ B A) → goddess buff + petal storm.
-- Fill the Serotonin meter to **100%** → unlocks a hidden love note.
-- The compliment button (bottom-left) never runs out. Neither do I.
+- Type **`love`** anywhere → a quiet explosion + a line meant only for her.
+- **Konami code** (↑↑↓↓←→←→ B A) → kiss the moon.
+- Fill the meter to **100%** in the little game → a hidden line unlocks.
+- The button bottom-left never runs out of thoughts. Neither does he.

@@ -12,7 +12,7 @@
 
   var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
   var mouse = { x: -999, y: -999 };
-  var COLORS = ['#e79bb0', '#f4c2cf', '#e9b949', '#ffe1a8', '#f7d9e2', '#cde9c4'];
+  var COLORS = ['#d987a4', '#8a3158', '#d8b25a', '#b98fae', '#e8729a', '#5e3a55'];
 
   function resize() {
     W = canvas.width = window.innerWidth * dpr;
