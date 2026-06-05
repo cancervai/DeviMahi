@@ -1,0 +1,4 @@
+# Netlify config — publish the romantic web/ site
+[build]
+  publish = "web"
+  command = ""
