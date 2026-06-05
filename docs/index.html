@@ -1,695 +1,275 @@
-<html lang="en-us"><script src="https://pygame-web.github.io/cdn/0.9.3/pythons.js" type=module id="site" data-python="python3.12" data-LINES=42 data-COLUMNS=132 data-os="vtx,snd,gui" async defer>#<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3e7d3" />
+<title>For Mahi · Goddess of Love &amp; Peace 🌸</title>
+<meta name="description" content="A hand-built, hyper-animated Ghibli love letter for Mahi — bouquets, jokes, worship, and one very serious shrine." />
 
-print("""
-Loading nocturne_of_paws from nocturne_of_paws.apk
-    Pygbag Version : 0.9.3
-    Template Version : 0.9.4
-    Python  : 3.12
-    CDN URL : https://pygame-web.github.io/cdn/0.9.3/
-    Screen  : 1280x720
-    Title   : nocturne_of_paws
-    Folder  : nocturne_of_paws
-    Authors : pgw
-    SPDX-License-Identifier: cookiecutter.spdx
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
 
-""")
-
-import sys
-import asyncio
-import platform
-import json
-from pathlib import Path
-
-# do not rename
-async def custom_site():
-    import embed
-    platform.document.body.style.background = "#0d0506"
-
-    platform.window.transfer.hidden = true
-    platform.window.canvas.style.visibility = "visible"
-
-
-    bundle = "nocturne_of_paws"
-
-    # the C or js loader could do that but be explicit.
-    appdir = Path(f"/data/data/{bundle}") # /data/data/nocturne_of_paws
-    appdir.mkdir()
-
-
-    # unpack filesystem from compressed archive into work dir
-    if platform.window.location.host.find('.itch.zone')>0:
-        import zipfile
-        async with platform.fopen("nocturne_of_paws.apk", "rb") as archive:
-            with zipfile.ZipFile(archive) as zip_ref:
-                zip_ref.extractall(appdir.as_posix())
-    else:
-        import tarfile
-        async with platform.fopen("nocturne_of_paws.tar.gz", "rb") as archive:
-            tar = tarfile.open(fileobj=archive, mode="r:gz")
-            tar.extractall(path=appdir.as_posix(), filter='tar')
-            tar.close()
-
-    # preloader will change to work dir and prepend it to sys.path
-    platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
-
-
-    # wait preloading complete : that includes images and wasm compilation of bundled modules
-    while embed.counter()<0:
-        await asyncio.sleep(.1)
-
-    main = appdir / "assets" / "main.py"
-
-    # TODO: test for window.webkitAudioContext and block aio loop until gesture if accessing media manager play
-    # before a gesture is recorded ( touch or click )
-
-    # test/wait user media interaction
-    if not platform.window.MM.UME:
-
-        # now that apk is mounted we have access to font cache
-        # but we need to fill __file__ that is not yet set
-        __import__(__name__).__file__ = main
-
-        # now make a prompt
-        msg  = "Ready to start ! Please click/touch page"
-        platform.window.infobox.innerText = msg
-        print("\n"*4, f"    * Waiting for media user engagement. {msg} *" , "\n"*4)
-
-        while not platform.window.MM.UME:
-            await asyncio.sleep(.1)
-
-    # start async top level machinery if not started and add a console in any case if requested.
-    await TopLevel_async_handler.start_toplevel(platform.shell, console=window.python.config.debug)
-
-    # now that apk is mounted we have access to font cache
-    # but we need to fill __file__/__name__ that are not yet set
-    __import__(__name__).__file__ = main
-
-
-    def ui_callback(pkg):
-        platform.window.infobox.innerText = f"installing {pkg}"
-
-    await shell.source(main, callback=ui_callback)
-
-    # if you don't reach that step
-    # your main.py has an infinite sync loop somewhere !
-
-    platform.window.infobox.style.display = "none"
-    platform.window.config.gui_divider = 1
-    platform.window.window_resize()
-    print("default.tmpl: done")
-
-    shell.interactive()
-
-asyncio.run( custom_site() )
-
-
-# BEGIN BLOCK
-#
-# now this is the html part you can (and should) customize
-# It is not mandatory : pygame-script when it reads the first line (also called
-# shebang ) of above code create absolute minimal widget set
-# required for running with default rules
-#
-# do not alter that comment block it is separating python code from html code
-# =============================================================================
-# --></script><head><!--
-//=============================================================================
-//
-//
-//
-//
-//
-//
-//
-
-    {%- if cookiecutter.comment != "" -%}
-{{cookiecutter.comment}}
-    {% endif %}
-
---><script type="application/javascript">
-// END BLOCK
-
-// ── Cross-Origin Isolation via service worker ────────────────────────────────
-// GitHub Pages cannot set COOP/COEP response headers.
-// Without them SharedArrayBuffer is unavailable → pygbag hangs on a blank screen.
-// The service worker caches CDN assets (~40 MB) so every load after the first
-// is instant, and it injects COOP/COEP so WASM works on GitHub Pages.
-if (!self.crossOriginIsolated && "serviceWorker" in navigator) {
-  // Guard: at most 2 silent reloads per session to avoid infinite loops
-  const reloads = +sessionStorage.getItem("coi-r") || 0;
-  if (reloads < 2) {
-    navigator.serviceWorker.register("coi-serviceworker.js").then(reg => {
-      function reload() {
-        sessionStorage.setItem("coi-r", reloads + 1);
-        location.replace(location.href);
-      }
-      if (reg.active) { reload(); return; }
-      const sw = reg.installing || reg.waiting;
-      if (sw) sw.addEventListener("statechange", e => { if (e.target.state === "activated") reload(); });
-      navigator.serviceWorker.addEventListener("controllerchange", reload);
-    }).catch(e => console.warn("COI service-worker:", e));
-  }
-}
-
-// ── pygbag config ─────────────────────────────────────────────────────────────
-config = {
-    xtermjs : "0",
-    _sdl2 : "canvas",
-    user_canvas : 0,
-    user_canvas_managed : 0,
-    gui_divider : 1,
-    ume_block : 1,
-    can_close : 0,
-    archive : "nocturne_of_paws",
-    gui_debug : 0,
-    cdn : "https://pygame-web.github.io/cdn/0.9.3/",
-    autorun : 0,
-    PYBUILD : "3.12",
-    fb_ar   : 1.77,
-    fb_width : "480",
-    fb_height : "270"
-}
-
-function show_infobox() {}
-
-// ── Early CDN failure detection ───────────────────────────────────────────────
-// pygbag's module script (id="site") errors immediately if the CDN is blocked —
-// e.g. Brave Shields, firewall, or network issue. Catch it and show a fix within seconds.
-(function detectCDNBlock() {
-  const siteScript = document.getElementById("site");
-  if (!siteScript) return;
-
-  // module script fires "error" if src fails to load
-  siteScript.addEventListener("error", function() {
-    window.__cdnBlocked = true;
-    // Give the page a moment to render, then show the error
-    setTimeout(function() {
-      if (window.startFired) return;
-      var ib = document.getElementById("infobox");
-      var hint = document.getElementById("first-load-hint");
-      var bar  = document.getElementById("px-bar");
-      var safariBtn = document.getElementById("safari-open-btn");
-      if (ib)   { ib.textContent = "> CDN BLOCKED"; ib.className = "error"; }
-      if (hint) hint.textContent = "BRAVE / ADBLOCK IS BLOCKING\nTHE GAME RUNTIME.\nDISABLE SHIELDS FOR THIS SITE\nOR OPEN IN SAFARI BELOW.";
-      if (bar)  bar.textContent  = "████████████████ !!";
-      if (safariBtn) safariBtn.style.display = "inline-block";
-    }, 800);
-  });
-
-  // Fallback: if nothing from pygbag after 15 s, CDN is probably blocked/slow
-  setTimeout(function() {
-    if (window.startFired || window.__pygbagStarted) return;
-    var ib = document.getElementById("infobox");
-    var hint = document.getElementById("first-load-hint");
-    var safariBtn = document.getElementById("safari-open-btn");
-    var ua = navigator.userAgent.toLowerCase();
-    var isBrave = (ua.indexOf("brave") > -1) ||
-                  (typeof navigator.brave !== "undefined" && navigator.brave.isBrave);
-    if (ib) {
-      ib.textContent = isBrave ? "> BRAVE SHIELDS BLOCKING CDN" : "> CDN NOT RESPONDING";
-      ib.className = "error";
-    }
-    if (hint) hint.textContent = isBrave
-      ? "DISABLE BRAVE SHIELDS FOR\nCANCERVAI.GITHUB.IO\nOR OPEN IN SAFARI:"
-      : "CDN FAILED TO LOAD.\nTRY SAFARI OR CHROME:";
-    if (safariBtn) safariBtn.style.display = "inline-block";
-  }, 15000);
-})();
-
-</script>
-
-    <title>Nocturne of Paws</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
-    <link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
-    <!-- Pixel font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
-    <style>
-    *, *::before, *::after {
-        box-sizing: border-box; margin: 0; padding: 0;
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
-        image-rendering: -webkit-optimize-contrast;
-    }
-
-    html {
-        height: -webkit-fill-available;
-        height: 100%;
-    }
-    body {
-        width: 100%;
-        height: 100vh;
-        height: -webkit-fill-available;
-        overflow: hidden;
-        background: #000;
-        /* CRT scanline texture */
-        background-image: repeating-linear-gradient(
-            0deg, transparent, transparent 2px,
-            rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
-        );
-        font-family: "Press Start 2P", "Courier New", monospace;
-        color: #c8a84b;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-        touch-action: none;
-        position: fixed;
-        inset: 0;
-    }
-
-    /* ── Game canvas ── */
-    canvas#canvas {
-        position: fixed !important;
-        background: #000;
-        z-index: 2;
-        touch-action: none;
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
-        image-rendering: -webkit-optimize-contrast;
-    }
-    @media (orientation: landscape) {
-        canvas#canvas { inset: 0; width: 100vw !important; height: 100vh !important; object-fit: contain; }
-    }
-    @media (orientation: portrait) {
-        canvas#canvas { top:0; left:0; right:0; bottom:auto; width:100vw !important; height:56.25vw !important; object-fit: fill; }
-    }
-
-    /* ── Pixel loading screen ── */
-    #loading-overlay {
-        position: fixed; inset: 0;
-        background: #000;
-        display: -webkit-flex; display: flex;
-        -webkit-flex-direction: column; flex-direction: column;
-        -webkit-align-items: center; align-items: center;
-        -webkit-justify-content: center; justify-content: center;
-        gap: 20px;
-        padding: 20px;
-        z-index: 50;
-        -webkit-transition: opacity 0.3s steps(3); transition: opacity 0.3s steps(3);
-    }
-    #loading-overlay.fade-out { opacity: 0; pointer-events: none; }
-
-    /* Pixel border box */
-    .px-box {
-        border: 3px solid #c8a84b;
-        box-shadow: 0 0 0 3px #000, 0 0 0 6px #3a1a00,
-                    inset 0 0 0 3px #000;
-        padding: 18px 24px;
-        text-align: center;
-        position: relative;
-        width: min(340px, 90vw);
-    }
-    /* Pixel corners */
-    .px-box::before, .px-box::after {
-        content: "";
-        position: absolute;
-        width: 8px; height: 8px;
-        background: #000;
-    }
-    .px-box::before { top: -3px; left: -3px; }
-    .px-box::after  { bottom: -3px; right: -3px; }
-
-    .game-title {
-        font-size: clamp(0.9rem, 3.8vw, 1.25rem);
-        color: #f0c060;
-        text-shadow: 3px 3px 0 #3a1a00, -1px -1px 0 #000;
-        line-height: 1.6;
-        letter-spacing: 0.08em;
-    }
-    .game-sub {
-        font-size: clamp(0.38rem, 1.4vw, 0.5rem);
-        color: #5a3515;
-        letter-spacing: 0.2em;
-        margin-top: 6px;
-        text-transform: uppercase;
-    }
-
-    /* Pixel candles using block chars */
-    .candles {
-        font-size: clamp(0.65rem, 2.5vw, 0.85rem);
-        color: #c8a84b;
-        letter-spacing: 0.8em;
-        -webkit-animation: blink 1.2s steps(1) infinite;
-        animation: blink 1.2s steps(1) infinite;
-    }
-    @-webkit-keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    @keyframes blink         { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    /* Block-character progress bar */
-    #px-bar {
-        font-size: clamp(0.5rem, 2vw, 0.7rem);
-        color: #c8a84b;
-        letter-spacing: 1px;
-        font-family: "Press Start 2P", monospace;
-        min-height: 1.4em;
-        text-align: center;
-        text-shadow: 2px 2px 0 #3a1a00;
-    }
-
-    #infobox {
-        font-size: clamp(0.38rem, 1.6vw, 0.52rem);
-        color: #7a5c20;
-        letter-spacing: 0.05em;
-        text-align: center;
-        min-height: 2.4em;
-        line-height: 1.8;
-        padding: 0 4px;
-        -webkit-transition: color 0.1s steps(1); transition: color 0.1s steps(1);
-        word-break: break-word;
-    }
-    #infobox.ready { color: #f0c060; -webkit-animation: blink 0.9s steps(1) infinite; animation: blink 0.9s steps(1) infinite; }
-    #infobox.error { color: #ff4040; -webkit-animation: none; animation: none; }
-
-    #first-load-hint {
-        font-size: clamp(0.32rem, 1.3vw, 0.44rem);
-        color: #2a1408;
-        text-align: center;
-        line-height: 2;
-        max-width: min(300px, 85vw);
-    }
-
-    /* ── Pixel touch controls ── */
-    #touch-ctrls {
-        position: fixed; left:0; right:0;
-        pointer-events: none;
-        z-index: 20;
-        opacity: 0;
-        -webkit-transition: opacity 0.2s steps(2); transition: opacity 0.2s steps(2);
-        display: none;
-    }
-    @media (pointer: coarse) { #touch-ctrls { display: block; } }
-    #touch-ctrls.visible { opacity: 1; pointer-events: auto; }
-
-    .tBtn {
-        position: absolute;
-        background: rgba(30,8,0,0.75);
-        /* Pixel border: double-line with gap */
-        border: 3px solid #c8a84b;
-        box-shadow: 0 0 0 2px #000, 0 0 0 4px #3a1a00;
-        border-radius: 2px;          /* nearly square — pixel feel */
-        color: #c8a84b;
-        display: -webkit-flex; display: flex;
-        -webkit-align-items: center; align-items: center;
-        -webkit-justify-content: center; justify-content: center;
-        font-family: "Press Start 2P", monospace;
-        font-size: 14px;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-        cursor: pointer;
-        will-change: transform;
-        -webkit-transition: none; transition: none;
-    }
-    .tBtn.pressed, .tBtn:active {
-        background: rgba(200,168,75,0.25);
-        box-shadow: 0 0 0 2px #000, 0 0 0 4px #c8a84b;
-        -webkit-transform: translate(2px,2px); transform: translate(2px,2px);
-    }
-
-    @media (orientation: landscape) {
-        #touch-ctrls { bottom:0; top:auto; height:180px; }
-        #bL    { width:62px; height:62px; left:14px;   bottom:76px; }
-        #bR    { width:62px; height:62px; left:90px;   bottom:76px; }
-        #bU    { width:62px; height:62px; left:52px;   bottom:150px; }
-        #bJump { width:68px; height:68px; right:88px;  bottom:98px;  font-size:16px; }
-        #bHold { width:60px; height:60px; right:14px;  bottom:120px; font-size:11px; letter-spacing:0; }
-        #bEnter{ width:52px; height:52px; right:158px; bottom:78px;  font-size:11px; }
-    }
-    @media (orientation: portrait) {
-        #touch-ctrls { top:56.25vw; bottom:0; height:auto; }
-        #bL    { width:88px; height:88px; left:18px;   top:50%; margin-top:-90px;  font-size:20px; }
-        #bR    { width:88px; height:88px; left:122px;  top:50%; margin-top:-90px;  font-size:20px; }
-        #bU    { width:88px; height:88px; left:70px;   top:50%; margin-top:-196px; font-size:20px; }
-        #bJump { width:92px; height:92px; right:18px;  top:50%; margin-top:-130px; font-size:22px; }
-        #bHold { width:80px; height:80px; right:124px; top:50%; margin-top:-40px;  font-size:13px; letter-spacing:0; }
-        #bEnter{ width:68px; height:68px; right:18px;  top:50%; margin-top:12px;   font-size:13px; }
-    }
-
-    /* ── Hide all pygbag debug UI ── */
-    #pyconsole, #system, #crt, #dlg, #html,
-    #status, progress, #transfer,
-    #load_min, #load_avg, #load_max, #load_rst,
-    #level, #stateBattery, #aiostop, #aiopaused_true,
-    #aiopaused_false, #pygame_mixer_music_pause,
-    #info, #box, canvas#canvas3d { display: none !important; }
-    </style>
-
+<!-- Styles -->
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/animations.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%B8%3C/text%3E%3C/svg%3E" />
 </head>
-
 <body>
 
-    <!-- Primary game canvas (pygbag renders here) -->
-    <canvas class="emscripten" id="canvas" width="1px" height="1px"
-        oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
+<!-- ===================== LOADER ===================== -->
+<div id="loader" class="loader">
+  <div class="loader-inner">
+    <svg class="loader-flower" viewBox="0 0 120 120" aria-hidden="true">
+      <g class="lf-petals">
+        <ellipse class="lf-petal" cx="60" cy="34" rx="13" ry="22"/>
+        <ellipse class="lf-petal" cx="60" cy="34" rx="13" ry="22" transform="rotate(72 60 60)"/>
+        <ellipse class="lf-petal" cx="60" cy="34" rx="13" ry="22" transform="rotate(144 60 60)"/>
+        <ellipse class="lf-petal" cx="60" cy="34" rx="13" ry="22" transform="rotate(216 60 60)"/>
+        <ellipse class="lf-petal" cx="60" cy="34" rx="13" ry="22" transform="rotate(288 60 60)"/>
+      </g>
+      <circle class="lf-core" cx="60" cy="60" r="12"/>
+    </svg>
+    <p class="loader-text">Summoning the Goddess Mahi…</p>
+    <div class="loader-bar"><span id="loaderFill"></span></div>
+    <p class="loader-sub" id="loaderPct">0%</p>
+  </div>
+</div>
 
-    <!-- Pixel loading screen -->
-    <div id="loading-overlay">
-        <div class="candles">&#x2665; &#x2665; &#x2665;</div>
-        <div class="px-box">
-            <div class="game-title">NOCTURNE<br>OF PAWS</div>
-            <div class="game-sub">VELVET . CRIMSON . STARDUST</div>
-        </div>
-        <div id="px-bar">&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;</div>
-        <div id="infobox">&gt; LOADING...</div>
-        <div id="first-load-hint">1ST VISIT: ~2 MIN (40MB DOWNLOAD)<br>CACHED AFTER &mdash; INSTANT NEXT TIME</div>
-        <!-- shown only on CDN block / browser error -->
-        <a id="safari-open-btn"
-           href="x-safari-https://cancervai.github.io/DeviMahi/"
-           style="display:none; font-family:'Press Start 2P',monospace; font-size:0.55rem;
-                  color:#000; background:#c8a84b; border:3px solid #f0c060;
-                  box-shadow:3px 3px 0 #3a1a00; padding:10px 16px;
-                  text-decoration:none; letter-spacing:0.08em; margin-top:4px;">
-            [ OPEN IN SAFARI ]
-        </a>
+<!-- ===================== PERSISTENT UI ===================== -->
+<canvas id="petals" class="petals-canvas" aria-hidden="true"></canvas>
+<canvas id="heartTrail" class="heart-trail" aria-hidden="true"></canvas>
+
+<button id="audioToggle" class="audio-toggle" aria-label="Toggle music" title="Music (off)">
+  <span class="audio-ico">🔇</span>
+</button>
+
+<div class="love-meter" aria-hidden="true">
+  <span class="lm-label">Oxytocin</span>
+  <div class="lm-track"><span id="lmFill" class="lm-fill"></span></div>
+  <span id="lmPct" class="lm-pct">0%</span>
+</div>
+
+<a href="#chapter-1" class="skip-link">Skip to story</a>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero scene" id="hero">
+  <!-- layered parallax Ghibli meadow (pure SVG) -->
+  <div class="hero-sky" data-depth="0.1"></div>
+  <svg class="hero-sun" viewBox="0 0 200 200" data-depth="0.15" aria-hidden="true"><circle cx="100" cy="100" r="70"/></svg>
+  <div class="hero-clouds" data-depth="0.25" aria-hidden="true">
+    <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  </div>
+  <svg class="hero-hills back" viewBox="0 0 1440 320" preserveAspectRatio="none" data-depth="0.35" aria-hidden="true">
+    <path d="M0,224 C240,160 480,288 720,240 C960,192 1200,256 1440,208 L1440,320 L0,320 Z"/>
+  </svg>
+  <svg class="hero-hills mid" viewBox="0 0 1440 320" preserveAspectRatio="none" data-depth="0.55" aria-hidden="true">
+    <path d="M0,272 C300,224 520,320 760,288 C1000,256 1220,304 1440,272 L1440,320 L0,320 Z"/>
+  </svg>
+  <div class="hero-flowers" data-depth="0.85" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <p class="kicker fade-up">A love letter, hand-built byte by byte</p>
+    <h1 class="hero-title" aria-label="For Mahi, Goddess of Love and Peace">
+      <span class="line"><span class="word">For</span></span>
+      <span class="line big"><span class="word goddess-name">Mahi</span></span>
+      <span class="line"><span class="word">Goddess of Love &amp; Peace</span></span>
+    </h1>
+    <p class="hero-sub fade-up">🌸 Devi Mahi · মাহি · my entire serotonin supply 🌸</p>
+    <a href="#chapter-1" class="cta fade-up">Begin the journey
+      <span class="cta-arrow">↓</span>
+    </a>
+    <p class="hero-tiny fade-up">(warning: side effects include butterflies, blushing &amp; uncontrollable smiling)</p>
+  </div>
+
+  <div class="scroll-hint" aria-hidden="true"><span></span></div>
+</header>
+
+<!-- ===================== CHAPTER I — HOW IT BEGAN ===================== -->
+<section class="chapter chapter-origin scene" id="chapter-1">
+  <div class="chapter-tag reveal">Chapter I</div>
+  <h2 class="chapter-title reveal">How the Universe Slipped Up</h2>
+  <div class="story-card reveal">
+    <p class="story-line" data-type>Once upon a time, the universe had ONE job: keep things balanced.</p>
+    <p class="story-line" data-type>Then it created <b>you</b>, Mahi — and absolutely fumbled the assignment. 🤡</p>
+    <p class="story-line" data-type>Now there's too much beauty, too much cuteness, and the serotonin market has crashed.</p>
+    <p class="story-line" data-type>Scientists are baffled. I am simply in love.</p>
+  </div>
+  <div class="sticker-row reveal">
+    <span class="sticker pop">🌸</span><span class="sticker pop">💛</span>
+    <span class="sticker pop">🦋</span><span class="sticker pop">✨</span><span class="sticker pop">🐈</span>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER II — BOUQUET OF REASONS ===================== -->
+<section class="chapter chapter-bouquet scene" id="chapter-2">
+  <div class="chapter-tag reveal">Chapter II</div>
+  <h2 class="chapter-title reveal">The Bouquet of Reasons</h2>
+  <p class="chapter-lead reveal">Every flower is a reason I'm obsessed with you. Tap one. 👇 (yes, on your phone too)</p>
+
+  <div class="bouquet" id="bouquet" aria-label="Interactive bouquet of reasons">
+    <!-- flowers injected by JS -->
+  </div>
+
+  <div class="reason-bubble" id="reasonBubble" role="status" aria-live="polite">
+    <span class="rb-emoji">🌷</span>
+    <p class="rb-text">Pick a flower, my love…</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER III — THE GODDESS REVEAL ===================== -->
+<section class="chapter chapter-reveal scene" id="chapter-3">
+  <div class="chapter-tag reveal">Chapter III</div>
+  <h2 class="chapter-title reveal">The Goddess, Revealed</h2>
+  <p class="chapter-lead reveal">They say you shouldn't look directly at a goddess. They were right. I haven't recovered.</p>
+
+  <div class="reveal-stage">
+    <figure class="portrait ghibli-frame reveal">
+      <div class="portrait-glow"></div>
+      <img src="assets/photos/mahi-selfie.jpg" alt="Mahi" loading="lazy" class="ghibli-img" />
+      <figcaption>exhibit A: the face that ended my productivity</figcaption>
+    </figure>
+    <figure class="portrait ghibli-frame reveal">
+      <div class="portrait-glow"></div>
+      <img src="assets/photos/mahi-kitten.jpg" alt="Mahi holding a kitten" loading="lazy" class="ghibli-img" />
+      <figcaption>two of the cutest things alive, one photo. illegal, really.</figcaption>
+    </figure>
+  </div>
+
+  <div class="love-letter reveal">
+    <p>To my Mahi,</p>
+    <p>I used to think "love at first sight" was a marketing scam. Then I met you and immediately
+      filed a complaint with the universe for not introducing us sooner. You are sunshine that
+      learned how to laugh. You are the calm after every storm and somehow also my favourite storm.</p>
+    <p>If peace had a face, it would borrow yours and apologise for the upgrade.</p>
+    <p class="signoff">— forever yours, hopelessly 💛</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER IV — SHRINE OF THE HOLY FEET ===================== -->
+<section class="chapter chapter-shrine scene" id="chapter-4">
+  <div class="chapter-tag reveal">Chapter IV · classified</div>
+  <h2 class="chapter-title reveal">🦶👑 The Sacred Shrine of the Holy Feet</h2>
+  <p class="chapter-lead reveal">A solemn temple. Remove your shoes. Lower your phone brightness out of respect.</p>
+
+  <div class="shrine">
+    <div class="shrine-pillars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+    <figure class="relic reveal">
+      <div class="relic-rays" aria-hidden="true"></div>
+      <img src="assets/memes/holy-feet.jpg" alt="The sacred relic" loading="lazy" />
+      <figcaption>THE RELIC · est. priceless · do not touch (I will, though)</figcaption>
+    </figure>
+
+    <div class="reviews">
+      <article class="review reveal">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>"10/10 would worship again. Cried. Came back. Cried again."</p>
+        <span class="reviewer">— Me, every single day</span>
+      </article>
+      <article class="review reveal">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>"Pedicure so divine the local florists felt threatened."</p>
+        <span class="reviewer">— Anonymous (it's also me)</span>
+      </article>
+      <article class="review reveal">
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <p>"Two of them. Perfectly matched. A limited edition. Sold out forever — I bought both."</p>
+        <span class="reviewer">— Verified Devotee 🛐</span>
+      </article>
     </div>
 
-    <!-- Mobile touch controls (pointer:coarse only, fades in after game starts) -->
-    <div id="touch-ctrls">
-        <div class="tBtn" id="bL">&#9664;</div>
-        <div class="tBtn" id="bR">&#9654;</div>
-        <div class="tBtn" id="bU">&#9650;</div>
-        <div class="tBtn" id="bJump" title="Jump (Space)">&#10022;</div>
-        <div class="tBtn" id="bHold" title="Hold / Cuddle (H)">&#9825;</div>
-        <div class="tBtn" id="bEnter" title="Dialogue (Enter)">&#9998;</div>
+    <button class="bow-btn" id="bowBtn">🛐 Bow before them</button>
+    <p class="bow-count" id="bowCount">Devotees who have bowed: <b>0</b></p>
+    <p class="shrine-disclaimer reveal">* This shrine is 100% comedy, 100% affection, and legally distinct from being weird. I just think every part of you deserves a monument. 😌</p>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER V — MEME GALLERY ===================== -->
+<section class="chapter chapter-memes scene" id="chapter-5">
+  <div class="chapter-tag reveal">Chapter V</div>
+  <h2 class="chapter-title reveal">The Hall of Certified Memes</h2>
+  <p class="chapter-lead reveal">Our relationship, accurately documented. 🐈‍⬛</p>
+
+  <div class="meme-wall">
+    <figure class="meme-card tilt reveal">
+      <img src="assets/memes/cat-fan.jpg" alt="Cat behind a fan meme" loading="lazy" />
+      <figcaption>me, hiding, every time you smile at me ↑</figcaption>
+    </figure>
+    <figure class="meme-card tilt reveal text-meme">
+      <div class="tm-top">nobody:</div>
+      <div class="tm-mid">absolutely nobody:</div>
+      <div class="tm-bot">me at 3am: "but is Mahi okay though"</div>
+    </figure>
+    <figure class="meme-card tilt reveal text-meme alt">
+      <div class="big-emoji">🧎‍♂️💐</div>
+      <div class="tm-bot">my permanent emotional state around you</div>
+    </figure>
+    <figure class="meme-card tilt reveal">
+      <img src="assets/photos/us.jpg" alt="Us together" loading="lazy" />
+      <figcaption>exhibit B: the luckiest man alive (left) &amp; a goddess (right)</figcaption>
+    </figure>
+    <figure class="meme-card tilt reveal text-meme">
+      <div class="tm-top">terms &amp; conditions of loving you</div>
+      <div class="tm-list">
+        ✓ no refunds<br>✓ obsession is mandatory<br>✓ flowers forever<br>✓ feet remain holy
+      </div>
+    </figure>
+    <figure class="meme-card tilt reveal text-meme alt">
+      <div class="big-emoji">📈❤️</div>
+      <div class="tm-bot">my love for you (no top in sight)</div>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================== CHAPTER VI — SEROTONIN STATION ===================== -->
+<section class="chapter chapter-game scene" id="chapter-6">
+  <div class="chapter-tag reveal">Chapter VI</div>
+  <h2 class="chapter-title reveal">Serotonin Station 🎮</h2>
+  <p class="chapter-lead reveal">Catch the falling hearts &amp; flowers. Fill the meter to 100% to unlock a secret. (You won't lose. I rigged it. For you.)</p>
+
+  <div class="game-wrap">
+    <div class="game-hud">
+      <span class="game-score">Serotonin: <b id="gameScore">0</b>%</span>
+      <button class="game-btn" id="gameStart">Start catching 💘</button>
     </div>
-
-    <!-- Brief landscape nudge (auto-hides after 4s) -->
-    <div id="orient-hint" style="
-        display:none; position:fixed; bottom:0; left:0; right:0;
-        background:rgba(13,5,6,0.88); color:#5a3535; text-align:center;
-        font:0.72rem Georgia,serif; letter-spacing:0.1em; padding:10px;
-        z-index:80; pointer-events:none;">
-        &#8635; Rotate for full-screen play
+    <div class="game-arena" id="gameArena" aria-label="Catch the hearts mini-game">
+      <div class="basket" id="basket">🧺</div>
     </div>
-
-    <!-- Invisible stubs pygbag requires to exist in the DOM -->
-    <div id="transfer" hidden></div>
-    <div id="system"   hidden></div>
-    <canvas id="canvas3d" width="960px" height="540px" hidden></canvas>
-    <div id="pyconsole" hidden><div id="terminal" tabIndex="1"></div></div>
-    <div id="html"     hidden></div>
-    <div id="crt"      hidden></div>
-    <div id="dlg"      hidden>
-        <input type="file" id="dlg_multifile" multiple accept="image/*">
-        <label for="dlg_multifile">Select files</label>
+    <div class="game-secret" id="gameSecret" hidden>
+      <p class="secret-burst">💛 SECRET UNLOCKED 💛</p>
+      <p>You filled my heart the same way you just filled that meter — completely, effortlessly, and
+        with way too much cuteness. I'd choose you in every universe, Mahi. Even the ones where you
+        have weird taste in music. Especially those.</p>
     </div>
-    <div id="status"   hidden>Downloading&hellip;</div>
-    <progress id="progress" value="0" max="100" hidden></progress>
-    <div id="load_min" hidden></div><div id="load_avg" hidden></div>
-    <div id="load_max" hidden></div><div id="load_rst" hidden></div>
-    <div id="level"    hidden></div><div id="stateBattery" hidden></div>
-    <div id="aiostop"  hidden></div><div id="aiopaused_true"  hidden></div>
-    <div id="aiopaused_false" hidden></div>
-    <div id="pygame_mixer_music_pause" hidden></div>
-    <div id="info"     hidden></div>
-    <div id="box"      hidden></div>
-    <iframe id="iframe" hidden src="about:blank" name="iframe"></iframe>
+  </div>
+</section>
 
-    <script type="application/javascript">
-    // ── Touch controls — fire keyboard events into the canvas ────────────────
-    const KEY_MAP = {
-        bL:    { code: "ArrowLeft",  key: "ArrowLeft"  },
-        bR:    { code: "ArrowRight", key: "ArrowRight" },
-        bU:    { code: "ArrowUp",    key: "ArrowUp"    },
-        bJump: { code: "Space",      key: " "          },
-        bHold: { code: "KeyH",       key: "h"          },
-        bEnter:{ code: "Enter",      key: "Enter"      },
-    };
-    function fireKey(code, key, type) {
-        const opts = { code, key, bubbles: true, cancelable: true };
-        document.dispatchEvent(new KeyboardEvent(type, opts));
-        const cv = document.getElementById("canvas");
-        if (cv) cv.dispatchEvent(new KeyboardEvent(type, opts));
-    }
-    Object.entries(KEY_MAP).forEach(([id, { code, key }]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener("touchstart", e => {
-            e.preventDefault();
-            el.classList.add("pressed");
-            fireKey(code, key, "keydown");
-        }, { passive: false });
-        el.addEventListener("touchend", e => {
-            e.preventDefault();
-            el.classList.remove("pressed");
-            fireKey(code, key, "keyup");
-        }, { passive: false });
-        el.addEventListener("mousedown", () => { el.classList.add("pressed");    fireKey(code, key, "keydown"); });
-        el.addEventListener("mouseup",   () => { el.classList.remove("pressed"); fireKey(code, key, "keyup");   });
-    });
+<!-- ===================== FINALE ===================== -->
+<section class="chapter finale scene" id="finale">
+  <div class="finale-glow" aria-hidden="true"></div>
+  <h2 class="finale-title reveal">I love you, Mahi 💛</h2>
+  <p class="finale-text reveal">My goddess of love and peace. My favourite person, my softest place to land,
+    my forever bouquet. Thank you for existing exactly as you are.</p>
+  <button class="rain-btn" id="rainBtn">🌹 Make it rain petals</button>
+  <button class="cta replay" id="replayBtn">↻ Relive the journey</button>
+  <p class="finale-secret">psst — try typing the word <b>love</b> anywhere. or the legendary konami code. 😉</p>
+  <p class="finale-secret">🎮 we also have a little game → <a href="game/" style="color:var(--rose-deep);font-weight:700">play Nocturne of Paws</a></p>
+  <footer class="site-foot">Built with way too much love · for the one &amp; only Mahi · 🌸</footer>
+</section>
 
-    // ── Loading state ────────────────────────────────────────────────────────
-    const pxBar   = document.getElementById("px-bar");
-    const infobox = document.getElementById("infobox");
-    const overlay = document.getElementById("loading-overlay");
-    const hint    = document.getElementById("first-load-hint");
-    const tCtrls  = document.getElementById("touch-ctrls");
-    const progBar = document.getElementById("progress");
-    let   startFired = false;
-    let   realPct = 0;
+<!-- ===================== TOAST ===================== -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    // Block-char progress bar (16 cells)
-    const BAR = 16;
-    function setBar(pct) {
-        pct = Math.min(100, Math.max(0, pct));
-        const filled = Math.round(pct / 100 * BAR);
-        pxBar.textContent =
-            "█".repeat(filled) + "░".repeat(BAR - filled) +
-            " " + Math.round(pct) + "%";
-    }
-    setBar(0);
-
-    // Expose startFired globally so detectCDNBlock() can read it
-    window.__pygbagStarted = false;
-
-    // Timed stage messages — tells user exactly what's happening
-    const STAGES = [
-        [0,     "> LOADING..."],
-        [8000,  "> DOWNLOADING\n> PYTHON RUNTIME"],
-        [25000, "> COMPILING WASM"],
-        [60000, "> STILL GOING...\n> HANG TIGHT"],
-        [120000,"> TIMED OUT\n> TRY REFRESHING"],   // 2-min hard timeout
-    ];
-    // Fake-crawl bar: 0→65% over 90s before real data kicks in
-    let fakePct = 0;
-    const ticker = setInterval(() => {
-        if (startFired) { clearInterval(ticker); return; }
-        fakePct = Math.min(fakePct + 0.72, 65);
-        if (fakePct > realPct) setBar(fakePct);
-    }, 1000);
-    STAGES.forEach(([ms, msg]) => {
-        setTimeout(() => {
-            if (!startFired && !window.__cdnBlocked) {
-                infobox.textContent = msg;
-                if (ms >= 120000) {
-                    infobox.classList.add("error");
-                    clearInterval(ticker);
-                    hint.textContent = "TRY: CLOSE & REOPEN IN SAFARI";
-                    document.getElementById("safari-open-btn").style.display = "inline-block";
-                }
-            }
-        }, ms);
-    });
-
-    // Mirror pygbag's real progress element (overrides fake)
-    if (progBar) {
-        new MutationObserver(() => {
-            const pct = Math.round((progBar.value / (progBar.max || 100)) * 100);
-            if (pct > realPct) { realPct = pct; setBar(pct); }
-        }).observe(progBar, { attributes: true, attributeFilter: ["value"] });
-    }
-
-    // Watch status div (pygbag writes download text here)
-    const statusEl = document.getElementById("status");
-    if (statusEl) {
-        new MutationObserver(() => {
-            const txt = (statusEl.textContent || "").trim().toUpperCase();
-            if (txt) { infobox.textContent = "> " + txt; hint.style.display = "none"; }
-        }).observe(statusEl, { childList: true, characterData: true, subtree: true });
-    }
-
-    // Watch infobox for pygbag Python messages
-    new MutationObserver(() => {
-        const txt = (infobox.textContent || "").toLowerCase();
-        if (txt.includes("installing") || txt.includes("extracting")) {
-            hint.style.display = "none";
-            realPct = Math.max(realPct, 75); setBar(realPct);
-        }
-        if (!startFired && (txt.includes("ready") || txt.includes("click/touch") || txt.includes("please"))) {
-            clearInterval(ticker);
-            setBar(100);
-            infobox.textContent = "> TAP TO BEGIN";
-            infobox.classList.add("ready");
-            document.addEventListener("click",    onFirstGesture, { once: true });
-            document.addEventListener("touchend", onFirstGesture, { once: true, passive: false });
-        }
-    }).observe(infobox, { childList: true, characterData: true, subtree: true });
-
-    // Watch for infobox hidden (game running)
-    new MutationObserver(() => {
-        if (infobox.style.display === "none" && !startFired) {
-            startFired = true; clearInterval(ticker); fadeOverlay();
-        }
-    }).observe(infobox, { attributes: true, attributeFilter: ["style"] });
-
-    function onFirstGesture(e) {
-        if (e.cancelable) e.preventDefault();
-        if (window.MM) window.MM.UME = true;
-    }
-    function fadeOverlay() {
-        overlay.classList.add("fade-out");
-        setTimeout(() => { overlay.style.display = "none"; }, 400);
-        if (window.matchMedia("(pointer: coarse)").matches) tCtrls.classList.add("visible");
-    }
-
-    // ── iPhone 6 Plus: fix iOS Safari viewport height + orient hint ──────────
-    (function iosViewport() {
-        const hint = document.getElementById("orient-hint");
-        let hintTimer = null;
-
-        function update() {
-            const portrait = window.innerHeight > window.innerWidth;
-            // Show landscape nudge briefly when in portrait and game is running
-            if (portrait && hint && startFired) {
-                hint.style.display = "block";
-                clearTimeout(hintTimer);
-                hintTimer = setTimeout(() => { hint.style.display = "none"; }, 4000);
-            }
-        }
-
-        window.addEventListener("orientationchange", () => {
-            // Small delay so the browser has resized before we measure
-            setTimeout(update, 150);
-        });
-        window.addEventListener("resize", update);
-    })();
-
-    // ── Required pygbag JS callbacks ─────────────────────────────────────────
-    globalThis.__canvas_resized = () => {};
-
-    async function custom_onload(debug_hidden) {
-        ["pyconsole","system","transfer","info","box"].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.hidden = true;
-        });
-    }
-    function custom_prerun()  {}
-    function custom_postrun() {}
-
-    function window_resize() {
-        if (typeof Module !== "undefined" && typeof Module.window_resize === "function")
-            Module.window_resize();
-    }
-    function info_inline() {}
-    function info_online() {}
-    function frame_online() {}
-    </script>
-
+<!-- Scripts: GSAP + ScrollTrigger + Lenis from CDN, then our modules -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js" defer></script>
+<script src="js/petals.js" defer></script>
+<script src="js/easter-eggs.js" defer></script>
+<script src="js/scroll.js" defer></script>
+<script src="js/main.js" defer></script>
 </body>
 </html>

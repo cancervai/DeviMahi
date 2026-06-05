@@ -1,0 +1,695 @@
+<html lang="en-us"><script src="https://pygame-web.github.io/cdn/0.9.3/pythons.js" type=module id="site" data-python="python3.12" data-LINES=42 data-COLUMNS=132 data-os="vtx,snd,gui" async defer>#<!--
+
+print("""
+Loading nocturne_of_paws from nocturne_of_paws.apk
+    Pygbag Version : 0.9.3
+    Template Version : 0.9.4
+    Python  : 3.12
+    CDN URL : https://pygame-web.github.io/cdn/0.9.3/
+    Screen  : 1280x720
+    Title   : nocturne_of_paws
+    Folder  : nocturne_of_paws
+    Authors : pgw
+    SPDX-License-Identifier: cookiecutter.spdx
+
+""")
+
+import sys
+import asyncio
+import platform
+import json
+from pathlib import Path
+
+# do not rename
+async def custom_site():
+    import embed
+    platform.document.body.style.background = "#0d0506"
+
+    platform.window.transfer.hidden = true
+    platform.window.canvas.style.visibility = "visible"
+
+
+    bundle = "nocturne_of_paws"
+
+    # the C or js loader could do that but be explicit.
+    appdir = Path(f"/data/data/{bundle}") # /data/data/nocturne_of_paws
+    appdir.mkdir()
+
+
+    # unpack filesystem from compressed archive into work dir
+    if platform.window.location.host.find('.itch.zone')>0:
+        import zipfile
+        async with platform.fopen("nocturne_of_paws.apk", "rb") as archive:
+            with zipfile.ZipFile(archive) as zip_ref:
+                zip_ref.extractall(appdir.as_posix())
+    else:
+        import tarfile
+        async with platform.fopen("nocturne_of_paws.tar.gz", "rb") as archive:
+            tar = tarfile.open(fileobj=archive, mode="r:gz")
+            tar.extractall(path=appdir.as_posix(), filter='tar')
+            tar.close()
+
+    # preloader will change to work dir and prepend it to sys.path
+    platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
+
+
+    # wait preloading complete : that includes images and wasm compilation of bundled modules
+    while embed.counter()<0:
+        await asyncio.sleep(.1)
+
+    main = appdir / "assets" / "main.py"
+
+    # TODO: test for window.webkitAudioContext and block aio loop until gesture if accessing media manager play
+    # before a gesture is recorded ( touch or click )
+
+    # test/wait user media interaction
+    if not platform.window.MM.UME:
+
+        # now that apk is mounted we have access to font cache
+        # but we need to fill __file__ that is not yet set
+        __import__(__name__).__file__ = main
+
+        # now make a prompt
+        msg  = "Ready to start ! Please click/touch page"
+        platform.window.infobox.innerText = msg
+        print("\n"*4, f"    * Waiting for media user engagement. {msg} *" , "\n"*4)
+
+        while not platform.window.MM.UME:
+            await asyncio.sleep(.1)
+
+    # start async top level machinery if not started and add a console in any case if requested.
+    await TopLevel_async_handler.start_toplevel(platform.shell, console=window.python.config.debug)
+
+    # now that apk is mounted we have access to font cache
+    # but we need to fill __file__/__name__ that are not yet set
+    __import__(__name__).__file__ = main
+
+
+    def ui_callback(pkg):
+        platform.window.infobox.innerText = f"installing {pkg}"
+
+    await shell.source(main, callback=ui_callback)
+
+    # if you don't reach that step
+    # your main.py has an infinite sync loop somewhere !
+
+    platform.window.infobox.style.display = "none"
+    platform.window.config.gui_divider = 1
+    platform.window.window_resize()
+    print("default.tmpl: done")
+
+    shell.interactive()
+
+asyncio.run( custom_site() )
+
+
+# BEGIN BLOCK
+#
+# now this is the html part you can (and should) customize
+# It is not mandatory : pygame-script when it reads the first line (also called
+# shebang ) of above code create absolute minimal widget set
+# required for running with default rules
+#
+# do not alter that comment block it is separating python code from html code
+# =============================================================================
+# --></script><head><!--
+//=============================================================================
+//
+//
+//
+//
+//
+//
+//
+
+    {%- if cookiecutter.comment != "" -%}
+{{cookiecutter.comment}}
+    {% endif %}
+
+--><script type="application/javascript">
+// END BLOCK
+
+// ── Cross-Origin Isolation via service worker ────────────────────────────────
+// GitHub Pages cannot set COOP/COEP response headers.
+// Without them SharedArrayBuffer is unavailable → pygbag hangs on a blank screen.
+// The service worker caches CDN assets (~40 MB) so every load after the first
+// is instant, and it injects COOP/COEP so WASM works on GitHub Pages.
+if (!self.crossOriginIsolated && "serviceWorker" in navigator) {
+  // Guard: at most 2 silent reloads per session to avoid infinite loops
+  const reloads = +sessionStorage.getItem("coi-r") || 0;
+  if (reloads < 2) {
+    navigator.serviceWorker.register("coi-serviceworker.js").then(reg => {
+      function reload() {
+        sessionStorage.setItem("coi-r", reloads + 1);
+        location.replace(location.href);
+      }
+      if (reg.active) { reload(); return; }
+      const sw = reg.installing || reg.waiting;
+      if (sw) sw.addEventListener("statechange", e => { if (e.target.state === "activated") reload(); });
+      navigator.serviceWorker.addEventListener("controllerchange", reload);
+    }).catch(e => console.warn("COI service-worker:", e));
+  }
+}
+
+// ── pygbag config ─────────────────────────────────────────────────────────────
+config = {
+    xtermjs : "0",
+    _sdl2 : "canvas",
+    user_canvas : 0,
+    user_canvas_managed : 0,
+    gui_divider : 1,
+    ume_block : 1,
+    can_close : 0,
+    archive : "nocturne_of_paws",
+    gui_debug : 0,
+    cdn : "https://pygame-web.github.io/cdn/0.9.3/",
+    autorun : 0,
+    PYBUILD : "3.12",
+    fb_ar   : 1.77,
+    fb_width : "480",
+    fb_height : "270"
+}
+
+function show_infobox() {}
+
+// ── Early CDN failure detection ───────────────────────────────────────────────
+// pygbag's module script (id="site") errors immediately if the CDN is blocked —
+// e.g. Brave Shields, firewall, or network issue. Catch it and show a fix within seconds.
+(function detectCDNBlock() {
+  const siteScript = document.getElementById("site");
+  if (!siteScript) return;
+
+  // module script fires "error" if src fails to load
+  siteScript.addEventListener("error", function() {
+    window.__cdnBlocked = true;
+    // Give the page a moment to render, then show the error
+    setTimeout(function() {
+      if (window.startFired) return;
+      var ib = document.getElementById("infobox");
+      var hint = document.getElementById("first-load-hint");
+      var bar  = document.getElementById("px-bar");
+      var safariBtn = document.getElementById("safari-open-btn");
+      if (ib)   { ib.textContent = "> CDN BLOCKED"; ib.className = "error"; }
+      if (hint) hint.textContent = "BRAVE / ADBLOCK IS BLOCKING\nTHE GAME RUNTIME.\nDISABLE SHIELDS FOR THIS SITE\nOR OPEN IN SAFARI BELOW.";
+      if (bar)  bar.textContent  = "████████████████ !!";
+      if (safariBtn) safariBtn.style.display = "inline-block";
+    }, 800);
+  });
+
+  // Fallback: if nothing from pygbag after 15 s, CDN is probably blocked/slow
+  setTimeout(function() {
+    if (window.startFired || window.__pygbagStarted) return;
+    var ib = document.getElementById("infobox");
+    var hint = document.getElementById("first-load-hint");
+    var safariBtn = document.getElementById("safari-open-btn");
+    var ua = navigator.userAgent.toLowerCase();
+    var isBrave = (ua.indexOf("brave") > -1) ||
+                  (typeof navigator.brave !== "undefined" && navigator.brave.isBrave);
+    if (ib) {
+      ib.textContent = isBrave ? "> BRAVE SHIELDS BLOCKING CDN" : "> CDN NOT RESPONDING";
+      ib.className = "error";
+    }
+    if (hint) hint.textContent = isBrave
+      ? "DISABLE BRAVE SHIELDS FOR\nCANCERVAI.GITHUB.IO\nOR OPEN IN SAFARI:"
+      : "CDN FAILED TO LOAD.\nTRY SAFARI OR CHROME:";
+    if (safariBtn) safariBtn.style.display = "inline-block";
+  }, 15000);
+})();
+
+</script>
+
+    <title>Nocturne of Paws</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
+    <!-- Pixel font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+    *, *::before, *::after {
+        box-sizing: border-box; margin: 0; padding: 0;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    html {
+        height: -webkit-fill-available;
+        height: 100%;
+    }
+    body {
+        width: 100%;
+        height: 100vh;
+        height: -webkit-fill-available;
+        overflow: hidden;
+        background: #000;
+        /* CRT scanline texture */
+        background-image: repeating-linear-gradient(
+            0deg, transparent, transparent 2px,
+            rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+        );
+        font-family: "Press Start 2P", "Courier New", monospace;
+        color: #c8a84b;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
+        position: fixed;
+        inset: 0;
+    }
+
+    /* ── Game canvas ── */
+    canvas#canvas {
+        position: fixed !important;
+        background: #000;
+        z-index: 2;
+        touch-action: none;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+    }
+    @media (orientation: landscape) {
+        canvas#canvas { inset: 0; width: 100vw !important; height: 100vh !important; object-fit: contain; }
+    }
+    @media (orientation: portrait) {
+        canvas#canvas { top:0; left:0; right:0; bottom:auto; width:100vw !important; height:56.25vw !important; object-fit: fill; }
+    }
+
+    /* ── Pixel loading screen ── */
+    #loading-overlay {
+        position: fixed; inset: 0;
+        background: #000;
+        display: -webkit-flex; display: flex;
+        -webkit-flex-direction: column; flex-direction: column;
+        -webkit-align-items: center; align-items: center;
+        -webkit-justify-content: center; justify-content: center;
+        gap: 20px;
+        padding: 20px;
+        z-index: 50;
+        -webkit-transition: opacity 0.3s steps(3); transition: opacity 0.3s steps(3);
+    }
+    #loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+
+    /* Pixel border box */
+    .px-box {
+        border: 3px solid #c8a84b;
+        box-shadow: 0 0 0 3px #000, 0 0 0 6px #3a1a00,
+                    inset 0 0 0 3px #000;
+        padding: 18px 24px;
+        text-align: center;
+        position: relative;
+        width: min(340px, 90vw);
+    }
+    /* Pixel corners */
+    .px-box::before, .px-box::after {
+        content: "";
+        position: absolute;
+        width: 8px; height: 8px;
+        background: #000;
+    }
+    .px-box::before { top: -3px; left: -3px; }
+    .px-box::after  { bottom: -3px; right: -3px; }
+
+    .game-title {
+        font-size: clamp(0.9rem, 3.8vw, 1.25rem);
+        color: #f0c060;
+        text-shadow: 3px 3px 0 #3a1a00, -1px -1px 0 #000;
+        line-height: 1.6;
+        letter-spacing: 0.08em;
+    }
+    .game-sub {
+        font-size: clamp(0.38rem, 1.4vw, 0.5rem);
+        color: #5a3515;
+        letter-spacing: 0.2em;
+        margin-top: 6px;
+        text-transform: uppercase;
+    }
+
+    /* Pixel candles using block chars */
+    .candles {
+        font-size: clamp(0.65rem, 2.5vw, 0.85rem);
+        color: #c8a84b;
+        letter-spacing: 0.8em;
+        -webkit-animation: blink 1.2s steps(1) infinite;
+        animation: blink 1.2s steps(1) infinite;
+    }
+    @-webkit-keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes blink         { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* Block-character progress bar */
+    #px-bar {
+        font-size: clamp(0.5rem, 2vw, 0.7rem);
+        color: #c8a84b;
+        letter-spacing: 1px;
+        font-family: "Press Start 2P", monospace;
+        min-height: 1.4em;
+        text-align: center;
+        text-shadow: 2px 2px 0 #3a1a00;
+    }
+
+    #infobox {
+        font-size: clamp(0.38rem, 1.6vw, 0.52rem);
+        color: #7a5c20;
+        letter-spacing: 0.05em;
+        text-align: center;
+        min-height: 2.4em;
+        line-height: 1.8;
+        padding: 0 4px;
+        -webkit-transition: color 0.1s steps(1); transition: color 0.1s steps(1);
+        word-break: break-word;
+    }
+    #infobox.ready { color: #f0c060; -webkit-animation: blink 0.9s steps(1) infinite; animation: blink 0.9s steps(1) infinite; }
+    #infobox.error { color: #ff4040; -webkit-animation: none; animation: none; }
+
+    #first-load-hint {
+        font-size: clamp(0.32rem, 1.3vw, 0.44rem);
+        color: #2a1408;
+        text-align: center;
+        line-height: 2;
+        max-width: min(300px, 85vw);
+    }
+
+    /* ── Pixel touch controls ── */
+    #touch-ctrls {
+        position: fixed; left:0; right:0;
+        pointer-events: none;
+        z-index: 20;
+        opacity: 0;
+        -webkit-transition: opacity 0.2s steps(2); transition: opacity 0.2s steps(2);
+        display: none;
+    }
+    @media (pointer: coarse) { #touch-ctrls { display: block; } }
+    #touch-ctrls.visible { opacity: 1; pointer-events: auto; }
+
+    .tBtn {
+        position: absolute;
+        background: rgba(30,8,0,0.75);
+        /* Pixel border: double-line with gap */
+        border: 3px solid #c8a84b;
+        box-shadow: 0 0 0 2px #000, 0 0 0 4px #3a1a00;
+        border-radius: 2px;          /* nearly square — pixel feel */
+        color: #c8a84b;
+        display: -webkit-flex; display: flex;
+        -webkit-align-items: center; align-items: center;
+        -webkit-justify-content: center; justify-content: center;
+        font-family: "Press Start 2P", monospace;
+        font-size: 14px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        cursor: pointer;
+        will-change: transform;
+        -webkit-transition: none; transition: none;
+    }
+    .tBtn.pressed, .tBtn:active {
+        background: rgba(200,168,75,0.25);
+        box-shadow: 0 0 0 2px #000, 0 0 0 4px #c8a84b;
+        -webkit-transform: translate(2px,2px); transform: translate(2px,2px);
+    }
+
+    @media (orientation: landscape) {
+        #touch-ctrls { bottom:0; top:auto; height:180px; }
+        #bL    { width:62px; height:62px; left:14px;   bottom:76px; }
+        #bR    { width:62px; height:62px; left:90px;   bottom:76px; }
+        #bU    { width:62px; height:62px; left:52px;   bottom:150px; }
+        #bJump { width:68px; height:68px; right:88px;  bottom:98px;  font-size:16px; }
+        #bHold { width:60px; height:60px; right:14px;  bottom:120px; font-size:11px; letter-spacing:0; }
+        #bEnter{ width:52px; height:52px; right:158px; bottom:78px;  font-size:11px; }
+    }
+    @media (orientation: portrait) {
+        #touch-ctrls { top:56.25vw; bottom:0; height:auto; }
+        #bL    { width:88px; height:88px; left:18px;   top:50%; margin-top:-90px;  font-size:20px; }
+        #bR    { width:88px; height:88px; left:122px;  top:50%; margin-top:-90px;  font-size:20px; }
+        #bU    { width:88px; height:88px; left:70px;   top:50%; margin-top:-196px; font-size:20px; }
+        #bJump { width:92px; height:92px; right:18px;  top:50%; margin-top:-130px; font-size:22px; }
+        #bHold { width:80px; height:80px; right:124px; top:50%; margin-top:-40px;  font-size:13px; letter-spacing:0; }
+        #bEnter{ width:68px; height:68px; right:18px;  top:50%; margin-top:12px;   font-size:13px; }
+    }
+
+    /* ── Hide all pygbag debug UI ── */
+    #pyconsole, #system, #crt, #dlg, #html,
+    #status, progress, #transfer,
+    #load_min, #load_avg, #load_max, #load_rst,
+    #level, #stateBattery, #aiostop, #aiopaused_true,
+    #aiopaused_false, #pygame_mixer_music_pause,
+    #info, #box, canvas#canvas3d { display: none !important; }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- Primary game canvas (pygbag renders here) -->
+    <canvas class="emscripten" id="canvas" width="1px" height="1px"
+        oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
+
+    <!-- Pixel loading screen -->
+    <div id="loading-overlay">
+        <div class="candles">&#x2665; &#x2665; &#x2665;</div>
+        <div class="px-box">
+            <div class="game-title">NOCTURNE<br>OF PAWS</div>
+            <div class="game-sub">VELVET . CRIMSON . STARDUST</div>
+        </div>
+        <div id="px-bar">&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;</div>
+        <div id="infobox">&gt; LOADING...</div>
+        <div id="first-load-hint">1ST VISIT: ~2 MIN (40MB DOWNLOAD)<br>CACHED AFTER &mdash; INSTANT NEXT TIME</div>
+        <!-- shown only on CDN block / browser error -->
+        <a id="safari-open-btn"
+           href="x-safari-https://cancervai.github.io/DeviMahi/game/"
+           style="display:none; font-family:'Press Start 2P',monospace; font-size:0.55rem;
+                  color:#000; background:#c8a84b; border:3px solid #f0c060;
+                  box-shadow:3px 3px 0 #3a1a00; padding:10px 16px;
+                  text-decoration:none; letter-spacing:0.08em; margin-top:4px;">
+            [ OPEN IN SAFARI ]
+        </a>
+    </div>
+
+    <!-- Mobile touch controls (pointer:coarse only, fades in after game starts) -->
+    <div id="touch-ctrls">
+        <div class="tBtn" id="bL">&#9664;</div>
+        <div class="tBtn" id="bR">&#9654;</div>
+        <div class="tBtn" id="bU">&#9650;</div>
+        <div class="tBtn" id="bJump" title="Jump (Space)">&#10022;</div>
+        <div class="tBtn" id="bHold" title="Hold / Cuddle (H)">&#9825;</div>
+        <div class="tBtn" id="bEnter" title="Dialogue (Enter)">&#9998;</div>
+    </div>
+
+    <!-- Brief landscape nudge (auto-hides after 4s) -->
+    <div id="orient-hint" style="
+        display:none; position:fixed; bottom:0; left:0; right:0;
+        background:rgba(13,5,6,0.88); color:#5a3535; text-align:center;
+        font:0.72rem Georgia,serif; letter-spacing:0.1em; padding:10px;
+        z-index:80; pointer-events:none;">
+        &#8635; Rotate for full-screen play
+    </div>
+
+    <!-- Invisible stubs pygbag requires to exist in the DOM -->
+    <div id="transfer" hidden></div>
+    <div id="system"   hidden></div>
+    <canvas id="canvas3d" width="960px" height="540px" hidden></canvas>
+    <div id="pyconsole" hidden><div id="terminal" tabIndex="1"></div></div>
+    <div id="html"     hidden></div>
+    <div id="crt"      hidden></div>
+    <div id="dlg"      hidden>
+        <input type="file" id="dlg_multifile" multiple accept="image/*">
+        <label for="dlg_multifile">Select files</label>
+    </div>
+    <div id="status"   hidden>Downloading&hellip;</div>
+    <progress id="progress" value="0" max="100" hidden></progress>
+    <div id="load_min" hidden></div><div id="load_avg" hidden></div>
+    <div id="load_max" hidden></div><div id="load_rst" hidden></div>
+    <div id="level"    hidden></div><div id="stateBattery" hidden></div>
+    <div id="aiostop"  hidden></div><div id="aiopaused_true"  hidden></div>
+    <div id="aiopaused_false" hidden></div>
+    <div id="pygame_mixer_music_pause" hidden></div>
+    <div id="info"     hidden></div>
+    <div id="box"      hidden></div>
+    <iframe id="iframe" hidden src="about:blank" name="iframe"></iframe>
+
+    <script type="application/javascript">
+    // ── Touch controls — fire keyboard events into the canvas ────────────────
+    const KEY_MAP = {
+        bL:    { code: "ArrowLeft",  key: "ArrowLeft"  },
+        bR:    { code: "ArrowRight", key: "ArrowRight" },
+        bU:    { code: "ArrowUp",    key: "ArrowUp"    },
+        bJump: { code: "Space",      key: " "          },
+        bHold: { code: "KeyH",       key: "h"          },
+        bEnter:{ code: "Enter",      key: "Enter"      },
+    };
+    function fireKey(code, key, type) {
+        const opts = { code, key, bubbles: true, cancelable: true };
+        document.dispatchEvent(new KeyboardEvent(type, opts));
+        const cv = document.getElementById("canvas");
+        if (cv) cv.dispatchEvent(new KeyboardEvent(type, opts));
+    }
+    Object.entries(KEY_MAP).forEach(([id, { code, key }]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("touchstart", e => {
+            e.preventDefault();
+            el.classList.add("pressed");
+            fireKey(code, key, "keydown");
+        }, { passive: false });
+        el.addEventListener("touchend", e => {
+            e.preventDefault();
+            el.classList.remove("pressed");
+            fireKey(code, key, "keyup");
+        }, { passive: false });
+        el.addEventListener("mousedown", () => { el.classList.add("pressed");    fireKey(code, key, "keydown"); });
+        el.addEventListener("mouseup",   () => { el.classList.remove("pressed"); fireKey(code, key, "keyup");   });
+    });
+
+    // ── Loading state ────────────────────────────────────────────────────────
+    const pxBar   = document.getElementById("px-bar");
+    const infobox = document.getElementById("infobox");
+    const overlay = document.getElementById("loading-overlay");
+    const hint    = document.getElementById("first-load-hint");
+    const tCtrls  = document.getElementById("touch-ctrls");
+    const progBar = document.getElementById("progress");
+    let   startFired = false;
+    let   realPct = 0;
+
+    // Block-char progress bar (16 cells)
+    const BAR = 16;
+    function setBar(pct) {
+        pct = Math.min(100, Math.max(0, pct));
+        const filled = Math.round(pct / 100 * BAR);
+        pxBar.textContent =
+            "█".repeat(filled) + "░".repeat(BAR - filled) +
+            " " + Math.round(pct) + "%";
+    }
+    setBar(0);
+
+    // Expose startFired globally so detectCDNBlock() can read it
+    window.__pygbagStarted = false;
+
+    // Timed stage messages — tells user exactly what's happening
+    const STAGES = [
+        [0,     "> LOADING..."],
+        [8000,  "> DOWNLOADING\n> PYTHON RUNTIME"],
+        [25000, "> COMPILING WASM"],
+        [60000, "> STILL GOING...\n> HANG TIGHT"],
+        [120000,"> TIMED OUT\n> TRY REFRESHING"],   // 2-min hard timeout
+    ];
+    // Fake-crawl bar: 0→65% over 90s before real data kicks in
+    let fakePct = 0;
+    const ticker = setInterval(() => {
+        if (startFired) { clearInterval(ticker); return; }
+        fakePct = Math.min(fakePct + 0.72, 65);
+        if (fakePct > realPct) setBar(fakePct);
+    }, 1000);
+    STAGES.forEach(([ms, msg]) => {
+        setTimeout(() => {
+            if (!startFired && !window.__cdnBlocked) {
+                infobox.textContent = msg;
+                if (ms >= 120000) {
+                    infobox.classList.add("error");
+                    clearInterval(ticker);
+                    hint.textContent = "TRY: CLOSE & REOPEN IN SAFARI";
+                    document.getElementById("safari-open-btn").style.display = "inline-block";
+                }
+            }
+        }, ms);
+    });
+
+    // Mirror pygbag's real progress element (overrides fake)
+    if (progBar) {
+        new MutationObserver(() => {
+            const pct = Math.round((progBar.value / (progBar.max || 100)) * 100);
+            if (pct > realPct) { realPct = pct; setBar(pct); }
+        }).observe(progBar, { attributes: true, attributeFilter: ["value"] });
+    }
+
+    // Watch status div (pygbag writes download text here)
+    const statusEl = document.getElementById("status");
+    if (statusEl) {
+        new MutationObserver(() => {
+            const txt = (statusEl.textContent || "").trim().toUpperCase();
+            if (txt) { infobox.textContent = "> " + txt; hint.style.display = "none"; }
+        }).observe(statusEl, { childList: true, characterData: true, subtree: true });
+    }
+
+    // Watch infobox for pygbag Python messages
+    new MutationObserver(() => {
+        const txt = (infobox.textContent || "").toLowerCase();
+        if (txt.includes("installing") || txt.includes("extracting")) {
+            hint.style.display = "none";
+            realPct = Math.max(realPct, 75); setBar(realPct);
+        }
+        if (!startFired && (txt.includes("ready") || txt.includes("click/touch") || txt.includes("please"))) {
+            clearInterval(ticker);
+            setBar(100);
+            infobox.textContent = "> TAP TO BEGIN";
+            infobox.classList.add("ready");
+            document.addEventListener("click",    onFirstGesture, { once: true });
+            document.addEventListener("touchend", onFirstGesture, { once: true, passive: false });
+        }
+    }).observe(infobox, { childList: true, characterData: true, subtree: true });
+
+    // Watch for infobox hidden (game running)
+    new MutationObserver(() => {
+        if (infobox.style.display === "none" && !startFired) {
+            startFired = true; clearInterval(ticker); fadeOverlay();
+        }
+    }).observe(infobox, { attributes: true, attributeFilter: ["style"] });
+
+    function onFirstGesture(e) {
+        if (e.cancelable) e.preventDefault();
+        if (window.MM) window.MM.UME = true;
+    }
+    function fadeOverlay() {
+        overlay.classList.add("fade-out");
+        setTimeout(() => { overlay.style.display = "none"; }, 400);
+        if (window.matchMedia("(pointer: coarse)").matches) tCtrls.classList.add("visible");
+    }
+
+    // ── iPhone 6 Plus: fix iOS Safari viewport height + orient hint ──────────
+    (function iosViewport() {
+        const hint = document.getElementById("orient-hint");
+        let hintTimer = null;
+
+        function update() {
+            const portrait = window.innerHeight > window.innerWidth;
+            // Show landscape nudge briefly when in portrait and game is running
+            if (portrait && hint && startFired) {
+                hint.style.display = "block";
+                clearTimeout(hintTimer);
+                hintTimer = setTimeout(() => { hint.style.display = "none"; }, 4000);
+            }
+        }
+
+        window.addEventListener("orientationchange", () => {
+            // Small delay so the browser has resized before we measure
+            setTimeout(update, 150);
+        });
+        window.addEventListener("resize", update);
+    })();
+
+    // ── Required pygbag JS callbacks ─────────────────────────────────────────
+    globalThis.__canvas_resized = () => {};
+
+    async function custom_onload(debug_hidden) {
+        ["pyconsole","system","transfer","info","box"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.hidden = true;
+        });
+    }
+    function custom_prerun()  {}
+    function custom_postrun() {}
+
+    function window_resize() {
+        if (typeof Module !== "undefined" && typeof Module.window_resize === "function")
+            Module.window_resize();
+    }
+    function info_inline() {}
+    function info_online() {}
+    function frame_online() {}
+    </script>
+
+</body>
+</html>
